@@ -10,6 +10,10 @@
     int apsh_export(char **args);
     int check_background(char ** args);
     void add_prompt();
+    // Add these so main_integrated can use them:
+    char **tokenize_input(char *line);
+    int execute(char **args, LRUCache *cache);
+    int apsh_execute_with_and(char **args, LRUCache *cache);
 
 
     // struct def

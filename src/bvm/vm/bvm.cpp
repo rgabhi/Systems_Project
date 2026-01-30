@@ -1,0 +1,310 @@
+#include "bvm.h"
+#include "../commons.h"
+
+
+VM::VM(unsigned char* bytecode) {
+            this->program = bytecode;
+            this->inst_ptr = bytecode;
+            this->st_ptr = 0;
+            this->rst_ptr = 0;
+            this->instruction_cnt = 0;
+            
+            // init memory to zero
+            memset(this->memory, 0, sizeof(this->memory));
+            
+            // init heap (Link all objects into the free list initially)
+            for(int i = 0; i < HEAP_SIZE - 1; i++){
+                this->heap[i].right = &this->heap[i + 1];
+                this->heap[i].marked = false;  
+            }
+            this->heap[HEAP_SIZE -1].right = NULL;
+            this->heap[HEAP_SIZE -1].marked = false; 
+    
+            this->free_list = &this->heap[0];
+}
+
+
+// helper to check st size
+bool VM::check_stack(int count) {
+    if (this->st_ptr < count) {
+        printf("Error: Stack Underflow\n");
+        this->running = false;
+        return false;
+    }
+    return true;
+}
+
+void VM::run(){
+    this->running = true;
+    while(running){
+        
+        step();
+
+    }
+    
+}
+
+    // Getter for the benchmark tool to access the private counter
+long long VM::getInstructionCnt(){ return instruction_cnt; }
+
+
+void VM::step() {
+    if (!running) return;
+    this->instruction_cnt++;// increment per inst cycle
+    // 1. FETCH : get curr instruction
+    unsigned char opcode = *this->inst_ptr;
+    
+    // 2. DECODE: decide what to do
+    switch(opcode){
+        case HALT: // HALT
+        {
+            running = false;
+            break;
+        }
+        case PUSH: //PUSH
+        {    // get addr of the byte after opcode
+            // (int *):  cast it: treat addr as ptr to int
+            // * : dereference: read int val
+            if(st_ptr >= STACK_SIZE){
+                printf("Stack Overflow\n");
+                running = false;
+                break;
+            }
+            int val = *(int *)(this->inst_ptr + 1);
+            // stack logic
+            // add val to stack
+            // update stack ptr
+            this->stack[this->st_ptr] = val;
+            this->st_ptr++; 
+
+            // move to next inst by jumping 4 byte int
+            this->inst_ptr += 4;
+            break;
+        }
+        case POP: { // POP
+            if(check_stack(1)){
+                this->st_ptr--;
+            }
+            break;
+        }
+        case ADD: // ADD
+        {
+            if(!check_stack(2)){
+                break;
+            }
+            this->st_ptr--;
+            int b = this->stack[this->st_ptr];
+            this->st_ptr--;
+            int a = this->stack[this->st_ptr];
+            b = a + b;
+            this->stack[this->st_ptr] = b;
+            this->st_ptr++;
+            break;
+        }
+        case SUB: // SUBTRACT
+        {
+            if(!check_stack(2)){
+                break;
+            }
+            this->st_ptr--;
+            int b = this->stack[this->st_ptr];
+            this->st_ptr--;
+            int a = this->stack[this->st_ptr];
+            int res = a - b;
+            this->stack[this->st_ptr] = res;
+            this->st_ptr++;
+            break;
+        }
+        case MUL: // MUL
+        {
+            if(!check_stack(2)){
+                break;
+            }
+            this->st_ptr--;
+            int b = this->stack[this->st_ptr];
+            this->st_ptr--;
+            int a = this->stack[this->st_ptr];
+            int res = a*b;
+            this->stack[this->st_ptr] = res;
+            this->st_ptr++;
+            break;
+        }
+        case DIV: // DIV
+        {
+            if(!check_stack(2)){
+                break;
+            }
+            this->st_ptr--;
+            int b = this->stack[this->st_ptr];
+            if (b==0){
+                printf("Error: Div by Zero\n");
+                running = false;
+                break;
+            }
+            this->st_ptr--;
+            int a = this->stack[this->st_ptr];
+            int res = (int)a/b;
+            this->stack[this->st_ptr] = res;
+            this->st_ptr++;
+            break;
+        }
+        case CMP: { // CMP (eqal check)
+            if(!check_stack(2)){
+                break;
+            }
+            this->st_ptr--;
+            int b = this->stack[this->st_ptr];
+            this->st_ptr--;
+            int a = this->stack[this->st_ptr];
+            
+            
+            int res = (a < b) ? 1 : 0;
+            
+            this->stack[this->st_ptr] = res;
+            this->st_ptr++;
+            break;
+        }
+
+        case STORE: //  STORE IDX
+        {
+            // pop val from stack
+            this->st_ptr--;
+            int val =this->stack[this->st_ptr];
+            // get idx 
+            int idx = *(int *) (this->inst_ptr + 1);
+            this->memory[idx] = val;
+            // move inst_ptr
+            this->inst_ptr += 4;
+            break;
+        }
+        case LOAD: // LOAD IDX
+        {
+            if (st_ptr >= STACK_SIZE) {
+                printf("Stack Overflow\n");
+                running = false;
+                break;
+            }
+            // get idx
+            int idx = *(int *)(this->inst_ptr + 1);
+            
+            // read val from memory
+            int val = this->memory[idx];
+            // push to stack
+            this->stack[this->st_ptr] = val;
+            this->st_ptr++;
+
+            // move inst_ptr
+            this->inst_ptr += 4;
+            break;
+        }
+        
+        case JMP: // JUMP addr
+        {
+            // get idx
+            int target = *(int *)(this->inst_ptr + 1);
+
+            //update ptr
+            this->inst_ptr = this->program + target;
+            //jump to next instr
+            continue;
+        }
+        case JZ: // JZ addr
+        {
+            if(!check_stack(1)) break;
+            // pop val
+            this->st_ptr--;
+            int val = this->stack[this->st_ptr];
+
+            // target address
+            int target = *(int *)(this->inst_ptr + 1);
+
+            if(val == 0){
+                this->inst_ptr = this->program + target;
+                continue;
+            }
+            else{
+                //
+                this->inst_ptr += 4;
+                break;
+            }
+        }
+        case JNZ: // JNZ addr
+        {
+            if (!check_stack(1)) break;
+            // pop val
+            this->st_ptr--;
+            int val = this->stack[this->st_ptr];
+
+            // target address
+            int target = *(int *)(this->inst_ptr + 1);
+
+            if(val != 0){
+                this->inst_ptr = this->program + target;
+                continue;
+            }
+            else{
+                //
+                this->inst_ptr += 4;
+                break;
+            }
+        }
+        case DUP:
+        {
+            if (st_ptr >= STACK_SIZE) {
+                printf("Stack Overflow\n");
+                running = false;
+                break;
+            }
+            int top = this->stack[this->st_ptr - 1];
+            this->stack[this->st_ptr] = top;
+            this->st_ptr++;
+            break;
+
+        }
+        case CALL: // CALL addr
+        { 
+            // get target jump addr
+            int target = *(int *)(this->inst_ptr + 1);
+
+            // calc return addr (curr location + 5 bytes)
+            // store this as an OFFSET from start of prog
+            int return_addr = (int)(this->inst_ptr - this->program) + 5;
+
+            // push to RETURN STACK
+            this->ret_stack[this->rst_ptr] = return_addr;
+            this->rst_ptr++;
+
+            // jump
+            this->inst_ptr = this->program + target;
+            continue;
+        }
+
+        case RET: // RET
+        { 
+        // check if we have anywhere to return to
+        if (this->rst_ptr == 0) {
+            printf("Error: Stack underflow on RET\n");
+            running = false;
+            break;
+        }
+
+        // pop from RETURN STACK
+        this->rst_ptr--;
+        int ret_addr = this->ret_stack[this->rst_ptr];
+
+        // jump back
+        this->inst_ptr = this->program + ret_addr;
+        continue;
+        }
+        default:
+            printf("Unknown Opcode %x\n", opcode);
+            running = false;
+            break;
+
+    }
+
+    // move to next instruction (if not stopping)
+    if(running){
+        this->inst_ptr++;
+    }
+}
