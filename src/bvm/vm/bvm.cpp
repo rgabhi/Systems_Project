@@ -206,7 +206,7 @@ void VM::step() {
             //update ptr
             this->inst_ptr = this->program + target;
             //jump to next instr
-            continue;
+            // continue;
         }
         case JZ: // JZ addr
         {
@@ -220,7 +220,7 @@ void VM::step() {
 
             if(val == 0){
                 this->inst_ptr = this->program + target;
-                continue;
+                // continue;
             }
             else{
                 //
@@ -240,7 +240,7 @@ void VM::step() {
 
             if(val != 0){
                 this->inst_ptr = this->program + target;
-                continue;
+                // continue;
             }
             else{
                 //
@@ -276,7 +276,7 @@ void VM::step() {
 
             // jump
             this->inst_ptr = this->program + target;
-            continue;
+            // continue;
         }
 
         case RET: // RET
@@ -294,7 +294,7 @@ void VM::step() {
 
         // jump back
         this->inst_ptr = this->program + ret_addr;
-        continue;
+        // continue;
         }
         default:
             printf("Unknown Opcode %x\n", opcode);

@@ -1,11 +1,19 @@
+// src/system_manager.h
+
 #ifndef SYSTEM_MANAGER_H
 #define SYSTEM_MANAGER_H
 
 #include "bvm/vm/bvm.h"
 #include "bvm/assembler/assembler.h"
-#include "compiler.h" // CHANGED: Include the header, not the cpp
+#include "compiler.h"
 #include <map>
 #include <string>
+
+// Ensure C structures and headers are linked correctly
+extern "C" {
+    #include "parser/ast.h"
+    #include "shell/apsh_module.h"
+}
 
 struct Process {
     int pid;

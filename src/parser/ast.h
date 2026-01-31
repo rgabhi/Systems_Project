@@ -55,6 +55,9 @@ ASTNode* createIfNode(ASTNode *cond, ASTNode *thenBranch, ASTNode *elseBranch);
 ASTNode* createWhileNode(ASTNode *cond, ASTNode *body);
 ASTNode* createBlockNode(ASTNode *statementList);
 
+extern ASTNode* root; // This should be a global variable in your parser.y
+
+
 
 void freeAST(ASTNode *node);
 void printAST(ASTNode *node, int level); // helper to visualize tree
