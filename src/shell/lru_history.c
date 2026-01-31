@@ -8,7 +8,7 @@
 // Simple strdup implementation (in case your compiler doesn't have strdup)
 char *my_strdup(const char *s) {
     size_t len = strlen(s) + 1;
-    char *copy = malloc(len);
+    char *copy = (char *)malloc(len);
     if (copy) {
         memcpy(copy, s, len);
     }
@@ -16,11 +16,20 @@ char *my_strdup(const char *s) {
 }
 
 LRUCache *lru_create(int capacity) {
-    LRUCache *cache = malloc(sizeof(LRUCache));
-    if (!cache) return NULL;
-    cache->head = cache->tail = NULL;
+    // Correctly allocate memory for the structure
+    LRUCache *cache = (LRUCache*)malloc(sizeof(LRUCache)); 
+    
+    // Check if memory allocation failed
+    if (!cache) {
+        return NULL;
+    }
+
+    // Initialize the structure members
+    cache->head = NULL;
+    cache->tail = NULL;
     cache->capacity = capacity;
     cache->size = 0;
+    
     return cache;
 }
 
@@ -90,7 +99,7 @@ void lru_put(LRUCache *cache, const char *cmd) {
     }
 
     // Create new node
-    Node *node = malloc(sizeof(Node));
+    Node *node = (Node*)malloc(sizeof(Node));
     if (!node) return;
     node->cmd = my_strdup(cmd);
     if (!node->cmd) {

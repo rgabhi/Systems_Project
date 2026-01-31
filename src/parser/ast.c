@@ -1,5 +1,7 @@
 #include "ast.h"
 
+ASTNode* root=NULL;
+
 // helper to create node
 ASTNode* createNode(NodeType type){
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));

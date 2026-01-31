@@ -10,10 +10,6 @@
     int apsh_export(char **args);
     int check_background(char ** args);
     void add_prompt();
-    // Add these so main_integrated can use them:
-    char **tokenize_input(char *line);
-    int execute(char **args, LRUCache *cache);
-    int apsh_execute_with_and(char **args, LRUCache *cache);
 
 
     // struct def
@@ -40,6 +36,39 @@
     int lru_print(LRUCache *cache);
 
 
-  
+
+
+typedef struct ASTNode ASTNode; 
+extern ASTNode* parse_program(const char* filename); // Your Lab 2 entry function
+
+// --- Integration Assignment Structures ---
+typedef enum { SUBMITTED, RUNNING, PAUSED, TERMINATED } ProgramStatus;
+
+
+typedef struct {
+    int pid;               // Custom Program ID [cite: 229]
+    char *name;            // Program filename
+    ProgramStatus status;  // Current lifecycle state [cite: 230]
+    ASTNode *ast_root;
+    long long peak_memory; // Track peak stack/heap usage
+    int total_allocs;      // Track number of allocations
+}ManagedProgram;
+
+
+#define MAX_PROGRAMS 100
+extern ManagedProgram registry[MAX_PROGRAMS];
+extern int program_count;
+
+#include "ir.h"
+
+
+// --- New Command Prototypes ---
+int apsh_submit(char **args);
+int apsh_run(char **args);
+int apsh_debug(char **args);
+int apsh_kill(char **args);
+int apsh_memstat(char **args);
+
+
 
     #endif 

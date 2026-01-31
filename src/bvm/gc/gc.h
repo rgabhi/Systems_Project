@@ -19,6 +19,8 @@ Object* new_pair(VM* vm, Object* l, Object* r);
 Object* new_function(VM* vm);
 Object* new_closure(VM* vm, Object* fn, Object* env);
 
+int count_free_list(VM* vm);
+
 // push obj reference on VM stack
 void push(VM* vm, Object* obj);
 

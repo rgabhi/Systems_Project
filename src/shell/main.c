@@ -14,6 +14,8 @@
 #define TOKEN_DELIMS " \t\r\n\a"
 
 
+
+
 // LAUNCH METHOD
 int launch(char **args) {
    pid_t pid;
@@ -101,15 +103,11 @@ int launch(char **args) {
 }
 
 
-
-
-
-
 char **tokenize_input(char *line){
    int bufsize = TOKEN_BUFF_SZ;
    int position = 0;
    // allocate buffer
-    char **tokens = (char **)malloc(bufsize * sizeof(char*));
+   char **tokens = (char **)malloc(bufsize * sizeof(char*));
    char *p = line;
 
 
@@ -170,7 +168,7 @@ char **tokenize_input(char *line){
        // 4. if exceed buffer size, realloc
        if(position >= bufsize){
            bufsize += TOKEN_BUFF_SZ;
-           tokens = (char **)realloc(tokens, bufsize * sizeof(char*));
+           tokens = (char **) realloc(tokens, bufsize * sizeof(char*));
            if(!tokens){
                fprintf(stderr, "apsh: allocation error\n");
                exit(EXIT_FAILURE);
@@ -204,6 +202,15 @@ int execute(char **args, LRUCache *cache){
             return 1;
         }
     }
+
+    // --- Lifecycle Management Commands --- [cite: 232]
+    if (strcmp(args[0], "submit") == 0) return apsh_submit(args);
+    if (strcmp(args[0], "run") == 0)    return apsh_run(args);
+    if (strcmp(args[0], "debug") == 0)  return apsh_debug(args);
+    if (strcmp(args[0], "kill") == 0)   return apsh_kill(args);
+    if (strcmp(args[0], "memstat") == 0) return apsh_memstat(args);
+
+    
 
 
     if(strcmp(args[0], "cd") == 0){
@@ -271,69 +278,69 @@ int apsh_execute_with_and(char **args, LRUCache *cache) {
 
 
 
-// int main(){
-//     // ptr to line buffer 
-//     char *line = NULL;
-//     // size of line
-//     size_t len = 0;
-//     // num chars read
-//     ssize_t read;
-//     char **args;
-//     int status = 1;
-//     LRUCache *lru_cache = lru_create(20);
+int main(){
+    // ptr to line buffer 
+    char *line = NULL;
+    // size of line
+    size_t len = 0;
+    // num chars read
+    ssize_t read;
+    char **args;
+    int status = 1;
+    LRUCache *lru_cache = lru_create(20);
     
 
-//     signal(SIGINT, handle_sigint);
-//     signal(SIGCHLD, handle_sigchld); // Handle Zombies (Background processes)
+    signal(SIGINT, handle_sigint);
+    signal(SIGCHLD, handle_sigchld); // Handle Zombies (Background processes)
 
-//     printf(
-//     "\033[1;31m"  // Red skull
-//     "      .----.   @   @\n"
-//     "     / .-\"-.`.  \\v/\n"
-//     "     | | '\\ \\ \\_/ )\n"
-//     "   ,-' \\ `-.' /  /\n"
-//     "  '---`----'----'\n"
-//     "\033[0m"
-//     "\n\033[1;32m        AP_SHELL\033[0m\n\n"  // Green AP_SHELL centered
-//     );
+    printf(
+    "\033[1;31m"  // Red skull
+    "      .----.   @   @\n"
+    "     / .-\"-.`.  \\v/\n"
+    "     | | '\\ \\ \\_/ )\n"
+    "   ,-' \\ `-.' /  /\n"
+    "  '---`----'----'\n"
+    "\033[0m"
+    "\n\033[1;32m        AP_SHELL\033[0m\n\n"  // Green AP_SHELL centered
+    );
 
 
-//     while(status){
-//         // 1.
-//         // printf("||AP_SHELL||>> ");
-//         add_prompt();
+    while(status){
+        // 1.
+        // printf("||AP_SHELL||>> ");
+        add_prompt();
         
 
-//         //added by me
-//         // fflush(stdout);
+        //added by me
+        // fflush(stdout);
 
-//         // 2. read line from stdin
-//         read = getline(&line, &len, stdin);
+        // 2. read line from stdin
+        read = getline(&line, &len, stdin);
         
-//         // handle Ctrl-D - exit
-//         if(read == -1){
-//             if (feof(stdin)){
-//                 printf("\n");
-//                 break;
-//             }
-//             else{
-//                 // handle Ctrl-C
-//                 clearerr(stdin);
-//                 continue;
-//             }
-//         }
+        // handle Ctrl-D - exit
+        if(read == -1){
+            if (feof(stdin)){
+                printf("\n");
+                break;
+            }
+            else{
+                // handle Ctrl-C
+                clearerr(stdin);
+                continue;
+            }
+        }
         
-//         // 2.a add to history
-//         lru_put(lru_cache, line);
+        // 2.a add to history
+        lru_put(lru_cache, line);
 
-//         // 3. get args
-//         args = tokenize_input(line);
-//         if(args[0] != NULL){
-//             status = apsh_execute_with_and(args, lru_cache);
-//         }
-//         free(args);
-//     }
-//     lru_free(lru_cache);
-//     free(line);
-//     return 0;
-// }
+        // 3. get args
+        args = tokenize_input(line);
+        if(args[0] != NULL){
+            status = apsh_execute_with_and(args, lru_cache);
+        }
+        free(args);
+    }
+    lru_free(lru_cache);
+    free(line);
+    return 0;
+}

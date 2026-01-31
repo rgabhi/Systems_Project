@@ -11,7 +11,7 @@ extern FILE *yyin; // file ptr used by flex
 
 
 extern char* yytext; // Required to see the offending token
-ASTNode *root; // global var to hold root of tree
+extern ASTNode *root; // global var to hold root of tree
 
 // Simple symbol table for tracking declared variables
 #define MAX_VARS 1000
