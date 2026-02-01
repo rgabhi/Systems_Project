@@ -8,6 +8,7 @@ VM::VM(unsigned char* bytecode) {
             this->st_ptr = 0;
             this->rst_ptr = 0;
             this->instruction_cnt = 0;
+            this->running = true;
             
             // init memory to zero
             memset(this->memory, 0, sizeof(this->memory));
@@ -207,6 +208,7 @@ void VM::step() {
             this->inst_ptr = this->program + target;
             //jump to next instr
             // continue;
+            break;
         }
         case JZ: // JZ addr
         {
@@ -227,6 +229,7 @@ void VM::step() {
                 this->inst_ptr += 4;
                 break;
             }
+            break;
         }
         case JNZ: // JNZ addr
         {
@@ -247,6 +250,7 @@ void VM::step() {
                 this->inst_ptr += 4;
                 break;
             }
+            break;
         }
         case DUP:
         {
@@ -277,6 +281,8 @@ void VM::step() {
             // jump
             this->inst_ptr = this->program + target;
             // continue;
+
+            break;
         }
 
         case RET: // RET
@@ -295,6 +301,7 @@ void VM::step() {
         // jump back
         this->inst_ptr = this->program + ret_addr;
         // continue;
+        break;
         }
         default:
             printf("Unknown Opcode %x\n", opcode);
