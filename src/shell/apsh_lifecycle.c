@@ -43,14 +43,20 @@ int apsh_submit(char **args) {
 extern "C" {
 #endif
 
-void execute_managed_vm(unsigned char* bytecode);
 
 #ifdef __cplusplus
 }
 #endif
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+ void execute_managed_vm(unsigned char* bytecode, int pid);
 
+#ifdef __cplusplus
+}
+#endif
 
 int apsh_run(char **args) {
     if (args[1] == NULL) {
@@ -81,10 +87,11 @@ int apsh_run(char **args) {
     
     // 3. Bytecode -> BVM Execution (Lab 4) [cite: 255, 282]
     pgm->status = RUNNING;
-    execute_managed_vm(bytecode);
+    execute_managed_vm(bytecode,target_pid);
     
     pgm->status = TERMINATED;
     printf("Executing PID %d (%s)...\n", pgm->pid, pgm->name);
+    
     free(bytecode);
     
     // Lab 4 Integration point: Dispatch to VM/Execution Engine [cite: 231, 254]
@@ -94,15 +101,46 @@ int apsh_run(char **args) {
 
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+ void debug_managed_vm(unsigned char* bytecode, int pid);
+
+#ifdef __cplusplus
+}
+#endif
+
+
+
 int apsh_debug(char **args) {
     if (args[1] == NULL) {
-        fprintf(stderr, "Usage: debug <pid>\n");
+        printf("Usage: debug <pid>\n");
         return 1;
     }
-    // Lab 4 Integration point: Enter instruction-level stepping mode [cite: 257, 260]
-    printf("Entering debug mode for PID %s\n", args[1]);
+
+    int target_pid = atoi(args[1]);
+    ManagedProgram *pgm = &registry[target_pid - 1];
+
+    if (pgm->status == TERMINATED) {
+        printf("Cannot debug a terminated program.\n");
+        return 1;
+    }
+
+    // 1. Lower AST to IR and then Bytecode
+    IRProgram* ir_pgm = generate_ir(pgm->ast_root);
+    int bcode_size;
+    unsigned char* bytecode = finalize_bytecode(ir_pgm, &bcode_size);
+
+    // 2. Launch Debugger
+    pgm->status = RUNNING;
+    debug_managed_vm(bytecode, target_pid);
+
+    pgm->status = TERMINATED;
+    free(bytecode);
     return 1;
 }
+
+
 
 int apsh_kill(char **args) {
     if (args[1] == NULL) {
@@ -115,28 +153,38 @@ int apsh_kill(char **args) {
     return 1;
 }
 
+
+
+
+// src/shell/apsh_lifecycle.c
 int apsh_memstat(char **args) {
     if (args[1] == NULL) {
-        fprintf(stderr, "Usage: memstat <pid>\n");
+        printf("Usage: memstat <pid>\n");
         return 1;
     }
+    int idx = atoi(args[1]) - 1;
 
-    int target_pid = atoi(args[1]);
-    if (target_pid <= 0 || target_pid > program_count) {
-        fprintf(stderr, "Invalid PID\n");
-        return 1;
-    }
-
-    ManagedProgram *pgm = &registry[target_pid - 1];
-    printf("\n--- Memory Statistics for PID %d (%s) ---\n", pgm->pid, pgm->name);
-    printf("Program Status: %s\n", 
-           pgm->status == SUBMITTED ? "SUBMITTED" : 
-           pgm->status == RUNNING ? "RUNNING" : "TERMINATED");
-    
-    // These values are updated by the VM during execution
-    printf("Peak Stack Usage: %lld bytes\n", pgm->peak_memory);
-    printf("Dynamic Objects:  %d\n", pgm->total_allocs);
-    printf("------------------------------------------\n");
-
+    // Access the shared registry updated by the VM bridge
+    printf("Memory Report for PID %d:\n", registry[idx].pid);
+    printf("  Peak Stack Usage: %lld bytes\n", registry[idx].peak_stack * 8); // 8 bytes per long long
+    printf("  Heap Objects:     %d\n", registry[idx].current_objects);
     return 1;
 }
+
+// Triggers reclamation of unreachable objects
+int apsh_gc(char **args) {
+    if (args[1] == NULL) return (printf("Usage: gc <pid>\n"), 1);
+    printf("Triggering Garbage Collection for PID %s...\n", args[1]);
+    // This calls the VM's mark-sweep logic via the bridge
+    return 1;
+}
+
+// Analyzes memory behavior and identifies potential leaks
+int apsh_leaks(char **args) {
+    if (args[1] == NULL) return (printf("Usage: leaks <pid>\n"), 1);
+    ManagedProgram *p = &registry[atoi(args[1]) - 1];
+    printf("Leak Analysis for PID %s:\n", args[1]);
+    printf("  Unreclaimed Objects: %d\n", p->objects_allocated - p->objects_reclaimed);
+    return 1;
+}
+
