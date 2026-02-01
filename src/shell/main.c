@@ -209,6 +209,8 @@ int execute(char **args, LRUCache *cache){
     if (strcmp(args[0], "debug") == 0)  return apsh_debug(args);
     if (strcmp(args[0], "kill") == 0)   return apsh_kill(args);
     if (strcmp(args[0], "memstat") == 0) return apsh_memstat(args);
+    if (strcmp(args[0], "gc") == 0) return apsh_gc(args);
+    if (strcmp(args[0], "leaks") == 0) return apsh_leaks(args);
 
     
 

@@ -52,6 +52,14 @@ typedef struct {
     ASTNode *ast_root;
     long long peak_memory; // Track peak stack/heap usage
     int total_allocs;      // Track number of allocations
+
+    long long peak_stack;    
+    int current_objects;
+
+    // Add these two lines to fix the compilation error
+    int objects_allocated;   // Total objects currently in heap
+    int objects_reclaimed;   // Objects freed by last GC cycle
+
 }ManagedProgram;
 
 
@@ -67,8 +75,11 @@ int apsh_submit(char **args);
 int apsh_run(char **args);
 int apsh_debug(char **args);
 int apsh_kill(char **args);
+
+
+// 1. Add prototypes
 int apsh_memstat(char **args);
-
-
+int apsh_gc(char **args);
+int apsh_leaks(char **args);
 
     #endif 
