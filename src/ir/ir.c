@@ -28,12 +28,23 @@ void compile_ast(ASTNode* node, IRProgram* p) {
             break;
 
         case NODE_BIN_OP:
-            compile_ast(node->left, p);
-            compile_ast(node->right, p);
-            if (node->data.op == OP_PLUS) emit(p, OP_BINARY_ADD, 0, NULL);
-            else if (node->data.op == OP_MINUS) emit(p, OP_BINARY_SUB, 0, NULL);
-            else if (node->data.op == OP_MULT) emit(p, OP_BINARY_MUL, 0, NULL);
-            else if (node->data.op == OP_DIV) emit(p, OP_BINARY_DIV, 0, NULL);
+            if(node->data.op == OP_GT){
+                compile_ast(node->right, p); //push y first
+                compile_ast(node->left, p); // then x
+                emit(p, OP_COMPARE_LT, 0, NULL); //check y < x
+            }
+            else{
+                compile_ast(node->left, p);
+                compile_ast(node->right, p);
+                if (node->data.op == OP_PLUS) emit(p, OP_BINARY_ADD, 0, NULL);
+                else if (node->data.op == OP_MINUS) emit(p, OP_BINARY_SUB, 0, NULL);
+                else if (node->data.op == OP_MULT) emit(p, OP_BINARY_MUL, 0, NULL);
+                else if (node->data.op == OP_DIV) emit(p, OP_BINARY_DIV, 0, NULL);
+
+                // for x < y
+                else if(node->data.op == OP_LT) emit(p, OP_COMPARE_LT,0, NULL);
+                
+            }
             break;
 
         case NODE_ASSIGN:
