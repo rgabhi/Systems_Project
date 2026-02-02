@@ -1,5 +1,7 @@
 #include "ir.h"
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 // Helper to add instructions to the program
 void emit(IRProgram* p, IROpCode op, int imm, char* name) {
@@ -73,65 +75,89 @@ IRProgram* generate_ir(ASTNode* root) {
 }
 
 
+// --- Updated Helper: Find or add variable to local symbol table ---
+int get_var_address(char* name, char** symbol_table, int* symbol_count) {
+    for(int i = 0; i < *symbol_count; i++) {
+        if(strcmp(symbol_table[i], name) == 0) return i;
+    }
+    // Not found, add it
+    symbol_table[*symbol_count] = strdup(name);
+    return (*symbol_count)++;
+}
 
-
-// src/ir/ir.c
-// src/ir/ir.c
+// --- Updated Finalizer ---
 unsigned char* finalize_bytecode(IRProgram* p, int* out_size) {
     unsigned char* buffer = (unsigned char*)malloc(1024); 
     int pc = 0;
+
+    // Symbol table for this compilation (Maps variable names -> memory indices)
+    char* symbol_table[256]; 
+    int symbol_count = 0;
 
     for (int i = 0; i < p->count; i++) {
         IRInstruction inst = p->instructions[i];
         
         switch (inst.opcode) {
             case OP_LOAD_CONST:
-                buffer[pc++] = 0x01; // PUSH in commons.h
+                buffer[pc++] = 0x01; // PUSH
                 memcpy(buffer + pc, &inst.operand, sizeof(int));
                 pc += 4;
                 break;
 
-            case OP_LOAD_VAR: { // Added curly brace for local scope
-                buffer[pc++] = 0x31; // LOAD in commons.h
-                int idx = 0; // Fixed: now isolated in its own scope
-                memcpy(buffer + pc, &idx, sizeof(int));
+            case OP_LOAD_VAR: { 
+                buffer[pc++] = 0x31; // LOAD
+                // CORRECTED: Map variable name to dynamic address
+                int addr = get_var_address(inst.var_name, symbol_table, &symbol_count);
+                memcpy(buffer + pc, &addr, sizeof(int));
                 pc += 4;
                 break;
             }
 
-            case OP_STORE_VAR: { // Added curly brace for local scope
-                buffer[pc++] = 0x30; // STORE in commons.h
-                int s_idx = 0; // Fixed: now isolated in its own scope
-                memcpy(buffer + pc, &s_idx, sizeof(int));
+            case OP_STORE_VAR: { 
+                buffer[pc++] = 0x30; // STORE
+                // CORRECTED: Map variable name to dynamic address
+                int addr = get_var_address(inst.var_name, symbol_table, &symbol_count);
+                memcpy(buffer + pc, &addr, sizeof(int));
                 pc += 4;
                 break;
             }
 
             case OP_BINARY_ADD:
-                buffer[pc++] = 0x10; // ADD in commons.h
+                buffer[pc++] = 0x10; // ADD
+                break;
+            
+            case OP_BINARY_SUB:
+                buffer[pc++] = 0x11; // SUB (Added missing mapping)
+                break;
+
+            case OP_BINARY_MUL:
+                buffer[pc++] = 0x12; // MUL (Added missing mapping)
+                break;
+
+            case OP_BINARY_DIV:
+                buffer[pc++] = 0x13; // DIV (Added missing mapping)
                 break;
 
             case OP_COMPARE_LT:
-                buffer[pc++] = 0x14; // CMP in commons.h
+                buffer[pc++] = 0x14; // CMP
                 break;
 
             case OP_JUMP_IF_FALSE: {
-                buffer[pc++] = 0x21; // JZ (Jump if Zero) in commons.h
-                // The operand is the byte-offset to jump to
+                buffer[pc++] = 0x21; // JZ (Jump if Zero)
                 memcpy(buffer + pc, &inst.operand, sizeof(int));
                 pc += 4;
                 break;
             }
 
             case OP_JUMP: {
-                buffer[pc++] = 0x20; // JMP in commons.h
+                buffer[pc++] = 0x20; // JMP
                 memcpy(buffer + pc, &inst.operand, sizeof(int));
                 pc += 4;
                 break;
             }
 
             case OP_HALT:
-                buffer[pc++] = 0xFF; // HALT in commons.h
+                buffer[pc++] = 0xFF; // HALT
                 break;
 
             default:
@@ -140,5 +166,11 @@ unsigned char* finalize_bytecode(IRProgram* p, int* out_size) {
         }
     }
     *out_size = pc;
+    
+    // Free symbol table strings to avoid leaks in the compiler
+    for(int k = 0; k < symbol_count; k++){
+        free(symbol_table[k]);
+    }
+
     return buffer;
 }

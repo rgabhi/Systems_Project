@@ -19,36 +19,31 @@ extern "C" {
         }
         // Capture data for Lab 5 BEFORE the vm object is destroyed
         if (pid > 0 && pid <= MAX_PROGRAMS) {
-        int idx = pid - 1;
-       registry[idx].peak_stack = (long long)vm.st_ptr;
+            int idx = pid - 1;
+            registry[idx].peak_stack = (long long)vm.st_ptr;
 
-        int free_count = 0;
-        Object* curr = vm.free_list;
-        while (curr) {
-            free_count++;
-            curr = curr->right;
-        }
-        
-        // HEAP_SIZE is 120,000 in your bvm.h
-        registry[idx].objects_allocated = 120000 - free_count; 
-        registry[idx].current_objects = registry[idx].objects_allocated;
-        registry[idx].status = TERMINATED;
-           
+            int free_count = 0;
+            Object* curr = vm.free_list;
+            while (curr) {
+                free_count++;
+                curr = curr->right;
+            }
+            
+            // HEAP_SIZE is defined in your bvm.h (usually 120000)
+            registry[idx].objects_allocated = HEAP_SIZE - free_count; 
+            registry[idx].current_objects = registry[idx].objects_allocated;
+            registry[idx].status = TERMINATED;
         }
 
-        if(vm.st_ptr > 0) {   
-            printf("Final VM stack top: %lld\n", (long long)vm.stack[vm.st_ptr - 1]);
-        } 
-            printf("Stack: [Empty]\nMemory[0] %d\n", vm.memory[0]);
-        
         printf("--- BVM execution complete [Stats Saved] ---\n");
     }
 }
  
 
-//Debugger part
+// Debugger part
 #include <vector>
 #include <algorithm>
+#include <cstring> // for strncmp
 
 extern "C" {
     void debug_managed_vm(unsigned char* bytecode, int pid) {
@@ -57,7 +52,7 @@ extern "C" {
         std::vector<int> breakpoints; // List of PC offsets
 
         printf("\n=== BVM Debugger: PID %d ===\n", pid);
-        printf("Commands: [s]tep, [c]ontinue, [b]reak <addr>, [r]egs, [q]uit\n");
+        printf("Commands: [s]tep, [c]ontinue, [b]reak <addr>, [r]egs, [m]emstat, [q]uit\n");
 
         while (vm.running) {
             int current_pc = (int)(vm.inst_ptr - vm.program);
@@ -82,6 +77,13 @@ extern "C" {
             else if (cmd == 'r') { // Inspect Registers
                 printf("  PC: %d | SP: %d | Inst Count: %lld\n", 
                        current_pc, vm.st_ptr, vm.instruction_cnt);
+            }
+            // --- ADDED MEMSTAT COMMAND ---
+            else if (strncmp(input, "memstat", 7) == 0 || cmd == 'm') {
+                int free_slots = count_free_list(&vm);
+                int used = HEAP_SIZE - free_slots;
+                printf("  [Heap] Used Objects: %d / %d\n", used, HEAP_SIZE);
+                printf("  [Stack] Depth: %d\n", vm.st_ptr);
             } 
             else if (cmd == 'c') { // Continue until breakpoint or halt
                 vm.step(); // Step once to move past current breakpoint
@@ -93,6 +95,10 @@ extern "C" {
                     }
                     vm.step();
                 }
+            }
+            else if (input[0] == 'g') { // Force Garbage Collection
+                int reclaimed = gc(&vm);
+                printf("  [GC] Reclaimed %d objects.\n", reclaimed);
             }
         }
         printf("=== Debugger Session Terminated ===\n");
