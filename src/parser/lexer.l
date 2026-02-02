@@ -18,6 +18,7 @@
 "else"  { return ELSE; }
 "while" { return WHILE; }
 "for"   { return FOR; }
+"heap"  { return HEAP; }
 
     /*operators*/
 "=="    { return EQ; }

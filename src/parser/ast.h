@@ -16,7 +16,8 @@ typedef enum {
     NODE_VAR_DECL, // var x
     NODE_IF, // if
     NODE_WHILE, // while
-    NODE_BLOCK // {...} 
+    NODE_BLOCK, // {...} 
+    NODE_HEAP_ALLOC // heap(x)
 } NodeType;
 
 // define operators
@@ -54,6 +55,7 @@ ASTNode* createVarDeclNode(char *name, ASTNode *initValue);
 ASTNode* createIfNode(ASTNode *cond, ASTNode *thenBranch, ASTNode *elseBranch);
 ASTNode* createWhileNode(ASTNode *cond, ASTNode *body);
 ASTNode* createBlockNode(ASTNode *statementList);
+ASTNode* createHeapAllocNode(ASTNode *exp);
 
 extern ASTNode* root; // This should be a global variable in your parser.y
 

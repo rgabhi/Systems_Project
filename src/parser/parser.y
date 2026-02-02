@@ -63,7 +63,7 @@ void checkVarUsage(const char* name) {
 %token <idName> IDENTIFIER
 
 /*keywords*/
-%token VAR IF ELSE WHILE FOR
+%token VAR IF ELSE WHILE FOR HEAP
 
 /* comp operators */
 %token EQ NEQ LT GT LE GE
@@ -264,6 +264,7 @@ primary:
     INTEGER { $$ = createIntNode($1); }
     | IDENTIFIER { $$ = createVarNode($1); }
     | LPAREN expression RPAREN { $$ = $2; }
+    | HEAP LPAREN expression RPAREN { $$ = createHeapAllocNode($3); }
     ;
 
 %%
