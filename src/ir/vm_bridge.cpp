@@ -55,7 +55,7 @@ extern "C" {
 #include <cstring> // for strncmp
 
 extern "C" {
-    void debug_managed_vm(unsigned char* bytecode, int pid) {
+    void debug_managed_vm(unsigned char* bytecode, int* lines, int pid) {
         VM vm(bytecode);
         char input[128];
         std::vector<int> breakpoints; // List of PC offsets
@@ -65,7 +65,7 @@ extern "C" {
 
         while (vm.running) {
             int current_pc = (int)(vm.inst_ptr - vm.program);
-            printf("dbg@PC_%03d> ", current_pc);
+            printf("dbg@L%03d:PC_%03d> ", lines[current_pc], current_pc);
             
             if (!fgets(input, sizeof(input), stdin)) break;
             char cmd = input[0];

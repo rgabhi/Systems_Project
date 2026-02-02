@@ -30,6 +30,7 @@ typedef enum {
 // Node Structure
 typedef struct ASTNode {
     NodeType type;
+    int lineNumber;
     // ptrs to connect tree
     struct ASTNode *left;
     struct ASTNode *right;

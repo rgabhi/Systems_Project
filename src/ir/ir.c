@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 // Helper to add instructions to the program
-void emit(IRProgram* p, IROpCode op, int imm, char* name) {
+void emit(IRProgram* p, IROpCode op, int imm, char* name, int lineNumber) {
     if (p->count >= p->capacity) {
         p->capacity *= 2;
         p->instructions = (IRInstruction*)realloc(p->instructions, sizeof(IRInstruction) * p->capacity);
@@ -12,6 +12,7 @@ void emit(IRProgram* p, IROpCode op, int imm, char* name) {
     p->instructions[p->count].opcode = op;
     p->instructions[p->count].operand = imm;
     p->instructions[p->count].var_name = name ? strdup(name) : NULL;
+    p->instructions[p->count].lineNumber = lineNumber;
     p->count++;
 }
 
@@ -20,41 +21,41 @@ void compile_ast(ASTNode* node, IRProgram* p) {
 
     switch (node->type) {
         case NODE_INT:
-            emit(p, OP_LOAD_CONST, node->data.intValue, NULL);
+            emit(p, OP_LOAD_CONST, node->data.intValue, NULL, node->lineNumber);
             break;
 
         case NODE_VAR:
-            emit(p, OP_LOAD_VAR, 0, node->data.idName);
+            emit(p, OP_LOAD_VAR, 0, node->data.idName, node->lineNumber);
             break;
 
         case NODE_BIN_OP:
             if(node->data.op == OP_GT){
                 compile_ast(node->right, p); 
                 compile_ast(node->left, p); 
-                emit(p, OP_COMPARE_LT, 0, NULL); 
+                emit(p, OP_COMPARE_LT, 0, NULL, node->lineNumber); 
             }
             else if(node->data.op == OP_GE){
                 compile_ast(node->right, p); compile_ast(node->left, p); 
-                emit(p, OP_COMPARE_LE, 0, NULL); 
+                emit(p, OP_COMPARE_LE, 0, NULL, node->lineNumber); 
             }
             else{
                 compile_ast(node->left, p);
                 compile_ast(node->right, p);
-                if (node->data.op == OP_PLUS) emit(p, OP_BINARY_ADD, 0, NULL);
-                else if (node->data.op == OP_MINUS) emit(p, OP_BINARY_SUB, 0, NULL);
-                else if (node->data.op == OP_MULT) emit(p, OP_BINARY_MUL, 0, NULL);
-                else if (node->data.op == OP_DIV) emit(p, OP_BINARY_DIV, 0, NULL);
-                else if (node->data.op == OP_LT) emit(p, OP_COMPARE_LT, 0, NULL);
-                else if (node->data.op == OP_EQ) emit(p, OP_COMPARE_EQ, 0, NULL);
+                if (node->data.op == OP_PLUS) emit(p, OP_BINARY_ADD, 0, NULL, node->lineNumber);
+                else if (node->data.op == OP_MINUS) emit(p, OP_BINARY_SUB, 0, NULL, node->lineNumber);
+                else if (node->data.op == OP_MULT) emit(p, OP_BINARY_MUL, 0, NULL, node->lineNumber);
+                else if (node->data.op == OP_DIV) emit(p, OP_BINARY_DIV, 0, NULL, node->lineNumber);
+                else if (node->data.op == OP_LT) emit(p, OP_COMPARE_LT, 0, NULL, node->lineNumber);
+                else if (node->data.op == OP_EQ) emit(p, OP_COMPARE_EQ, 0, NULL, node->lineNumber);
                 // FIX: Handle <=
-                else if (node->data.op == OP_LE) emit(p, OP_COMPARE_LE, 0, NULL);
+                else if (node->data.op == OP_LE) emit(p, OP_COMPARE_LE, 0, NULL, node->lineNumber);
                 // FIX: Use dedicated GE opcode
-                else if (node->data.op == OP_GE) emit(p, OP_COMPARE_GE, 0, NULL);
+                else if (node->data.op == OP_GE) emit(p, OP_COMPARE_GE, 0, NULL, node->lineNumber);
 
                 // FIX: Handle !=
-            else if (node->data.op == OP_NEQ) emit(p, OP_COMPARE_NEQ, 0, NULL);
+            else if (node->data.op == OP_NEQ) emit(p, OP_COMPARE_NEQ, 0, NULL, node->lineNumber);
 
-            else if (node->data.op == OP_NEQ) emit(p, OP_COMPARE_NEQ, 0, NULL);
+            else if (node->data.op == OP_NEQ) emit(p, OP_COMPARE_NEQ, 0, NULL, node->lineNumber);
             
             }
             break;
@@ -62,7 +63,7 @@ void compile_ast(ASTNode* node, IRProgram* p) {
         case NODE_ASSIGN:
         case NODE_VAR_DECL:
             compile_ast(node->left, p); 
-            emit(p, OP_STORE_VAR, 0, node->data.idName);
+            emit(p, OP_STORE_VAR, 0, node->data.idName, node->lineNumber);
             break;
 
         case NODE_BLOCK:
@@ -73,14 +74,14 @@ void compile_ast(ASTNode* node, IRProgram* p) {
             compile_ast(node->left, p); // Condition
             
             int jump_to_else_idx = p->count;
-            emit(p, OP_JUMP_IF_FALSE, 0, NULL);
+            emit(p, OP_JUMP_IF_FALSE, 0, NULL, node->lineNumber);
             
             compile_ast(node->right, p); // Then
             
             int jump_to_end_idx = -1;
             if (node->next) {
                  jump_to_end_idx = p->count;
-                 emit(p, OP_JUMP, 0, NULL);
+                 emit(p, OP_JUMP, 0, NULL, node->lineNumber);
             }
 
             p->instructions[jump_to_else_idx].operand = p->count; 
@@ -98,23 +99,23 @@ void compile_ast(ASTNode* node, IRProgram* p) {
             int start_idx = p->count;
             compile_ast(node->left, p);
             int jump_out_idx = p->count;
-            emit(p, OP_JUMP_IF_FALSE, 0, NULL);
+            emit(p, OP_JUMP_IF_FALSE, 0, NULL, node->lineNumber);
             compile_ast(node->right, p);
-            emit(p, OP_JUMP, start_idx, NULL);
+            emit(p, OP_JUMP, start_idx, NULL, node->lineNumber);
             p->instructions[jump_out_idx].operand = p->count;
             break;
         }
         case NODE_HEAP_ALLOC:{
             compile_ast(node->left, p);
-            emit(p, OP_ALLOC, 0, NULL);
+            emit(p, OP_ALLOC, 0, NULL, node->lineNumber);
             break;
         }
         case NODE_UNARY:
             if (node->data.op == OP_NEG) { // Assuming OP_NEG is '-'
                 // To do -X, we can do 0 - X
-                emit(p, OP_LOAD_CONST, 0, NULL); // Push 0
+                emit(p, OP_LOAD_CONST, 0, NULL, node->lineNumber); // Push 0
                 compile_ast(node->left, p);      // Push X
-                emit(p, OP_BINARY_SUB, 0, NULL); // 0 - X
+                emit(p, OP_BINARY_SUB, 0, NULL, node->lineNumber); // 0 - X
             }
             break;
     }
@@ -141,12 +142,13 @@ IRProgram* generate_ir(ASTNode* root) {
     p->count = 0;
     p->instructions = (IRInstruction*)malloc(sizeof(IRInstruction) * p->capacity);
     compile_ast(root, p);
-    emit(p, OP_HALT, 0, NULL);
+    emit(p, OP_HALT, 0, NULL, root->lineNumber);
     return p;
 }
 
-unsigned char* finalize_bytecode(IRProgram* p, int* out_size) {
+unsigned char* finalize_bytecode(IRProgram* p, int* out_size, int** out_lines) {
     unsigned char* buffer = (unsigned char*)malloc(2048); 
+    *out_lines = (int*)malloc(2048 * sizeof(int)); // Allocate line map
     int pc = 0;
     char* symbol_table[256]; 
     int symbol_count = 0;
@@ -171,6 +173,7 @@ unsigned char* finalize_bytecode(IRProgram* p, int* out_size) {
     // PASS 2: Emit Code
     for (int i = 0; i < p->count; i++) {
         IRInstruction inst = p->instructions[i];
+        int start_pc = pc;
         
         switch (inst.opcode) {
             case OP_LOAD_CONST:
@@ -228,6 +231,9 @@ unsigned char* finalize_bytecode(IRProgram* p, int* out_size) {
             }
             case OP_HALT: buffer[pc++] = 0xFF; break;
             default: buffer[pc++] = 0x00; break;
+        }
+        for (int k = start_pc; k < pc; k++) {
+            (*out_lines)[k] = inst.lineNumber;
         }
     }
     *out_size = pc;
