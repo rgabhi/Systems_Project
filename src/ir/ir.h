@@ -12,11 +12,13 @@ typedef enum {
     OP_COMPARE_LE , // NEW: For <=
     OP_COMPARE_GE, // NEW: For >=
     OP_COMPARE_NEQ, // NEW
+    OP_UNARY_NEG, // NEW: For -x
+
     OP_JUMP,       // Unconditional jump
     OP_JUMP_IF_FALSE,
     OP_HALT,
     OP_ALLOC, //heap action
-   
+    
 
 } IROpCode;
 
