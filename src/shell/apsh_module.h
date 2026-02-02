@@ -46,9 +46,9 @@ typedef enum { SUBMITTED, RUNNING, PAUSED, TERMINATED } ProgramStatus;
 
 
 typedef struct {
-    int pid;               // Custom Program ID [cite: 229]
+    int pid;               // Custom Program ID 
     char *name;            // Program filename
-    ProgramStatus status;  // Current lifecycle state [cite: 230]
+    ProgramStatus status;  // Current lifecycle state
     ASTNode *ast_root;
     long long peak_memory; // Track peak stack/heap usage
     int total_allocs;      // Track number of allocations
@@ -59,6 +59,7 @@ typedef struct {
     // Add these two lines to fix the compilation error
     int objects_allocated;   // Total objects currently in heap
     int objects_reclaimed;   // Objects freed by last GC cycle
+    int objects_reachable;
 
 }ManagedProgram;
 

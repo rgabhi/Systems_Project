@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #include "apsh_module.h"
 
 ManagedProgram *registry;
@@ -135,28 +136,42 @@ int apsh_debug(char **args) {
         return 1;
     }
 
-    int target_pid = atoi(args[1]);
-    ManagedProgram *pgm = &registry[target_pid - 1];
+    // 1. Fork!
+    pid_t pid = fork();
+    if(pid == 0){
+        int target_pid = atoi(args[1]);
+        ManagedProgram *pgm = &registry[target_pid - 1];
+    
+        // Safety Check (Child uses exit!)
+        if (pgm->status == TERMINATED) {
+            printf("Error: PID %d is terminated.\n", pgm->pid);
+            exit(1); 
+        }
+    
+        // 1. Lower AST to IR and then Bytecode
+        IRProgram* ir_pgm = generate_ir(pgm->ast_root);
+        int bcode_size;
+        int* lines = NULL;
+        unsigned char* bytecode = finalize_bytecode(ir_pgm, &bcode_size, &lines);
+    
+        // 2. Launch Debugger
+        pgm->status = RUNNING;
+        debug_managed_vm(bytecode, lines, target_pid);
+    
+        pgm->status = TERMINATED;
+        free(bytecode);
+        free(lines);
+        pgm->status = TERMINATED; // Mark as dead when done
+        exit(0); // Clean exit
+    }
+    else {
+        // --- PARENT PROCESS (The Safety Net) ---
+        int status;
+        waitpid(pid, &status, 0); // Wait for debugger to close
+    }
 
-    // if (pgm->status == TERMINATED) {
-    //         printf("Error: PID %d is terminated.\n", pgm->pid);
-    //         exit(1); // Important: Use exit() because we are in a child process!
-    // }
-
-    // 1. Lower AST to IR and then Bytecode
-    IRProgram* ir_pgm = generate_ir(pgm->ast_root);
-    int bcode_size;
-    int* lines = NULL;
-    unsigned char* bytecode = finalize_bytecode(ir_pgm, &bcode_size, &lines);
-
-    // 2. Launch Debugger
-    pgm->status = RUNNING;
-    debug_managed_vm(bytecode, lines, target_pid);
-
-    pgm->status = TERMINATED;
-    free(bytecode);
-    free(lines);
     return 1;
+
 }
 
 
@@ -204,9 +219,17 @@ int apsh_gc(char **args) {
 // Analyzes memory behavior and identifies potential leaks
 int apsh_leaks(char **args) {
     if (args[1] == NULL) return (printf("Usage: leaks <pid>\n"), 1);
+    
     ManagedProgram *p = &registry[atoi(args[1]) - 1];
+    
+    int active = p->objects_allocated - p->objects_reclaimed;
+    int reachable = p->objects_reachable;
+    int garbage = active - reachable; // The forensic result!
+
     printf("Leak Analysis for PID %s:\n", args[1]);
-    printf("  Unreclaimed Objects: %d\n", p->objects_allocated - p->objects_reclaimed);
+    printf("  Active Objects:    %d\n", active);
+    printf("  Reachable Globals: %d\n", reachable);
+    printf("  True Garbage:      %d  <-- (These are the actual leaks)\n", garbage);
     return 1;
 }
 

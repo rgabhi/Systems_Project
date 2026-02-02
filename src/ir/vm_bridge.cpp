@@ -41,6 +41,7 @@ extern "C" {
             // HEAP_SIZE is defined in your bvm.h (usually 120000)
             registry[idx].objects_allocated = vm.total_allocs; 
             registry[idx].objects_reclaimed = vm.total_freed;
+            registry[idx].objects_reachable = get_reachable_count(&vm);
             registry[idx].current_objects = vm.total_allocs - vm.total_freed;
             registry[idx].status = TERMINATED;
         }
