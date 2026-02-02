@@ -33,6 +33,10 @@ void compile_ast(ASTNode* node, IRProgram* p) {
                 compile_ast(node->left, p); 
                 emit(p, OP_COMPARE_LT, 0, NULL); 
             }
+            else if(node->data.op == OP_GE){
+                compile_ast(node->right, p); compile_ast(node->left, p); 
+                emit(p, OP_COMPARE_LE, 0, NULL); 
+            }
             else{
                 compile_ast(node->left, p);
                 compile_ast(node->right, p);
@@ -42,6 +46,14 @@ void compile_ast(ASTNode* node, IRProgram* p) {
                 else if (node->data.op == OP_DIV) emit(p, OP_BINARY_DIV, 0, NULL);
                 else if (node->data.op == OP_LT) emit(p, OP_COMPARE_LT, 0, NULL);
                 else if (node->data.op == OP_EQ) emit(p, OP_COMPARE_EQ, 0, NULL);
+                // FIX: Handle <=
+                else if (node->data.op == OP_LE) emit(p, OP_COMPARE_LE, 0, NULL);
+                // FIX: Use dedicated GE opcode
+                else if (node->data.op == OP_GE) emit(p, OP_COMPARE_GE, 0, NULL);
+
+                // FIX: Handle !=
+            else if (node->data.op == OP_NEQ) emit(p, OP_COMPARE_NEQ, 0, NULL);
+            
             }
             break;
 
@@ -80,7 +92,7 @@ void compile_ast(ASTNode* node, IRProgram* p) {
             break;
         }
         
-        case NODE_WHILE: {
+       case NODE_WHILE: {
             int start_idx = p->count;
             compile_ast(node->left, p);
             int jump_out_idx = p->count;
@@ -95,6 +107,14 @@ void compile_ast(ASTNode* node, IRProgram* p) {
             emit(p, OP_ALLOC, 0, NULL);
             break;
         }
+        case NODE_UNARY:
+            if (node->data.op == OP_NEG) { // Assuming OP_NEG is '-'
+                // To do -X, we can do 0 - X
+                emit(p, OP_LOAD_CONST, 0, NULL); // Push 0
+                compile_ast(node->left, p);      // Push X
+                emit(p, OP_BINARY_SUB, 0, NULL); // 0 - X
+            }
+            break;
     }
 
     // --- CRITICAL FIX: STOP DUPLICATE TRAVERSAL ---
@@ -167,6 +187,11 @@ unsigned char* finalize_bytecode(IRProgram* p, int* out_size) {
             case OP_BINARY_ADD: buffer[pc++] = 0x10; break;
             
             case OP_COMPARE_EQ: buffer[pc++] = 0x15; break;
+
+            case OP_COMPARE_LE: buffer[pc++] = 0x16; break; // Map to 0x16
+            case OP_COMPARE_GE: buffer[pc++] = 0x17; break; // MAP TO 0x17
+            case OP_COMPARE_NEQ: buffer[pc++] = 0x18; break; // MAP TO 0x18
+            
             
             case OP_BINARY_SUB:
                 buffer[pc++] = 0x11; // SUB (Added missing mapping)
@@ -271,6 +296,8 @@ void disassemble_bytecode(unsigned char* bytecode, int length) {
                 pc += 5;
                 break;
             }
+            case 0x17: printf("GE (>=)\n"); pc++; break; // Added Display
+            case 0x18: printf("NEQ (!=)\n"); pc++; break; // Display
 
             // --- 1-Byte Instructions ---
             case 0x02: printf("POP\n"); pc++; break;
@@ -279,12 +306,15 @@ void disassemble_bytecode(unsigned char* bytecode, int length) {
             case 0x11: printf("SUB\n"); pc++; break;
             case 0x12: printf("MUL\n"); pc++; break;
             case 0x13: printf("DIV\n"); pc++; break;
+
            
             case 0x41: printf("RET\n"); pc++; break;
             // Inside disassemble_bytecode function switch(opcode):
 
             case 0x14: printf("CMP (LT)\n"); pc++; break;
             case 0x15: printf("EQ\n"); pc++; break; // <--- ADD THIS
+
+            case 0x16: printf("LE (<=)\n"); pc++; break;
             
             case 0xFF: 
                 printf("HALT\n"); 

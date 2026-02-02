@@ -312,6 +312,31 @@ void VM::step() {
             break;
         }
 
+        case LE: { 
+            if(!check_stack(2)) break;
+            this->st_ptr--; int b = this->stack[this->st_ptr];
+            this->st_ptr--; int a = this->stack[this->st_ptr];
+            this->stack[this->st_ptr++] = (a <= b) ? 1 : 0;
+            break;
+        }
+
+        // NEW: GE is Greater Equal (>=)
+        case GE: { 
+            if(!check_stack(2)) break;
+            this->st_ptr--; int b = this->stack[this->st_ptr];
+            this->st_ptr--; int a = this->stack[this->st_ptr];
+            this->stack[this->st_ptr++] = (a >= b) ? 1 : 0;
+            break;
+        }
+
+        case NEQ: { 
+            if(!check_stack(2)) break;
+            this->st_ptr--; int b = this->stack[this->st_ptr];
+            this->st_ptr--; int a = this->stack[this->st_ptr];
+            this->stack[this->st_ptr++] = (a != b) ? 1 : 0;
+            break;
+        }
+
         default:
             printf("Unknown Opcode %x\n", opcode);
             running = false;
