@@ -17,6 +17,10 @@ typedef enum {
     JZ    = 0x21,
     JNZ   = 0x22,
 
+    LE    = 0x16, // <=  (NEW)
+    GE    = 0x17,
+    NEQ   = 0x18, // != (Not Equal) - NEW
+
     STORE = 0x30,
     LOAD  = 0x31,
 
