@@ -1,4 +1,5 @@
 #include "ast.h"
+extern int yylineno;
 
 ASTNode* root=NULL;
 
@@ -6,6 +7,7 @@ ASTNode* root=NULL;
 ASTNode* createNode(NodeType type){
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->type = type;
+    node->lineNumber = yylineno;
     node->left = NULL;
     node->right = NULL;
     node->next = NULL;

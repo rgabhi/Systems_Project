@@ -26,6 +26,7 @@ typedef struct {
     IROpCode opcode;
     int operand;     // Used for constants or jump offsets
     char* var_name;  // Used for variables
+    int lineNumber;
 } IRInstruction;
 
 typedef struct {
@@ -36,7 +37,7 @@ typedef struct {
 
 IRProgram* generate_ir(ASTNode* root);
 void print_ir(IRProgram* program);
-unsigned char* finalize_bytecode(IRProgram* p, int* out_size) ;
+unsigned char* finalize_bytecode(IRProgram* p, int* out_size, int** out_lines) ;
 
 void disassemble_bytecode(unsigned char* bytecode, int length);
 

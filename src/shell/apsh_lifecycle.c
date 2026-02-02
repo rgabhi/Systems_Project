@@ -84,7 +84,8 @@ int apsh_run(char **args) {
     
     // 2. IR -> Bytecode (Lowering to VM format) [cite: 248, 252]
     int bcode_size;
-    unsigned char* bytecode = finalize_bytecode(ir_pgm, &bcode_size);
+    int* lines = NULL;
+    unsigned char* bytecode = finalize_bytecode(ir_pgm, &bcode_size, &lines);
 
     
     // 3. Bytecode -> BVM Execution (Lab 4) [cite: 255, 282]
@@ -95,8 +96,9 @@ int apsh_run(char **args) {
     printf("Executing PID %d (%s)...\n", pgm->pid, pgm->name);
     
     free(bytecode);
+    free(lines);
     
-    // Lab 4 Integration point: Dispatch to VM/Execution Engine [cite: 231, 254]
+    // Lab 4 Integration point: Dispatch to VM/Execution Engine 
     return 1;
 
 
@@ -106,7 +108,7 @@ int apsh_run(char **args) {
 #ifdef __cplusplus
 extern "C" {
 #endif
- void debug_managed_vm(unsigned char* bytecode, int pid);
+ void debug_managed_vm(unsigned char* bytecode, int* lines, int pid);
 
 #ifdef __cplusplus
 }
@@ -131,14 +133,16 @@ int apsh_debug(char **args) {
     // 1. Lower AST to IR and then Bytecode
     IRProgram* ir_pgm = generate_ir(pgm->ast_root);
     int bcode_size;
-    unsigned char* bytecode = finalize_bytecode(ir_pgm, &bcode_size);
+    int* lines = NULL;
+    unsigned char* bytecode = finalize_bytecode(ir_pgm, &bcode_size, &lines);
 
     // 2. Launch Debugger
     pgm->status = RUNNING;
-    debug_managed_vm(bytecode, target_pid);
+    debug_managed_vm(bytecode, lines, target_pid);
 
     pgm->status = TERMINATED;
     free(bytecode);
+    free(lines);
     return 1;
 }
 
