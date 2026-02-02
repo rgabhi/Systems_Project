@@ -76,6 +76,7 @@ int apsh_run(char **args) {
     
     // Lab 3 Integration: Generate IR from the stored AST
     IRProgram* ir_pgm = generate_ir(pgm->ast_root);
+    printAST(pgm->ast_root, 0); // Debug: Print AST structure
     
     printf("Dispatching to Virtual Machine...\n");
 
@@ -84,6 +85,7 @@ int apsh_run(char **args) {
     // 2. IR -> Bytecode (Lowering to VM format) [cite: 248, 252]
     int bcode_size;
     unsigned char* bytecode = finalize_bytecode(ir_pgm, &bcode_size);
+
     
     // 3. Bytecode -> BVM Execution (Lab 4) [cite: 255, 282]
     pgm->status = RUNNING;

@@ -4,9 +4,18 @@
 
 
 extern "C" {
+
     void execute_managed_vm(unsigned char* bytecode,int pid) {
         // Instantiate your existing C++ VM class
         VM vm(bytecode);
+
+        unsigned char * prog=bytecode;
+
+        disassemble_bytecode(bytecode, 1024); 
+
+        for(int i=0;prog[i]!='\0';i++){
+            printf("Bytecode[%d]: 0x%02X\n", i, prog[i]);
+        }
         
         printf("--- BVM managed execution starting ---\n");
         vm.run(); // Call your existing run loop

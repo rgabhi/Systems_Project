@@ -13,6 +13,7 @@ typedef enum {
     OP_JUMP_IF_FALSE,
     OP_HALT,
     OP_ALLOC //heap action
+
 } IROpCode;
 
 typedef struct {
@@ -31,6 +32,6 @@ IRProgram* generate_ir(ASTNode* root);
 void print_ir(IRProgram* program);
 unsigned char* finalize_bytecode(IRProgram* p, int* out_size) ;
 
-
+void disassemble_bytecode(unsigned char* bytecode, int length);
 
 #endif

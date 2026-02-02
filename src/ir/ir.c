@@ -29,9 +29,9 @@ void compile_ast(ASTNode* node, IRProgram* p) {
 
         case NODE_BIN_OP:
             if(node->data.op == OP_GT){
-                compile_ast(node->right, p); //push y first
-                compile_ast(node->left, p); // then x
-                emit(p, OP_COMPARE_LT, 0, NULL); //check y < x
+                compile_ast(node->right, p); 
+                compile_ast(node->left, p); 
+                emit(p, OP_COMPARE_LT, 0, NULL); 
             }
             else{
                 compile_ast(node->left, p);
@@ -40,30 +40,54 @@ void compile_ast(ASTNode* node, IRProgram* p) {
                 else if (node->data.op == OP_MINUS) emit(p, OP_BINARY_SUB, 0, NULL);
                 else if (node->data.op == OP_MULT) emit(p, OP_BINARY_MUL, 0, NULL);
                 else if (node->data.op == OP_DIV) emit(p, OP_BINARY_DIV, 0, NULL);
-
-                // for x < y
-                else if(node->data.op == OP_LT) emit(p, OP_COMPARE_LT,0, NULL);
-                
+                else if (node->data.op == OP_LT) emit(p, OP_COMPARE_LT, 0, NULL);
+                else if (node->data.op == OP_EQ) emit(p, OP_COMPARE_EQ, 0, NULL);
             }
             break;
 
         case NODE_ASSIGN:
         case NODE_VAR_DECL:
-            compile_ast(node->left, p); // Evaluate expression
+            compile_ast(node->left, p); 
             emit(p, OP_STORE_VAR, 0, node->data.idName);
             break;
 
         case NODE_BLOCK:
-            compile_ast(node->left, p); // Process statement list
+            compile_ast(node->left, p); 
             break;
 
         case NODE_IF: {
             compile_ast(node->left, p); // Condition
-            int jump_patch_idx = p->count;
+            
+            int jump_to_else_idx = p->count;
             emit(p, OP_JUMP_IF_FALSE, 0, NULL);
             
-            compile_ast(node->right, p); // Then branch
-            p->instructions[jump_patch_idx].operand = p->count; // Patch offset
+            compile_ast(node->right, p); // Then
+            
+            int jump_to_end_idx = -1;
+            if (node->next) {
+                 jump_to_end_idx = p->count;
+                 emit(p, OP_JUMP, 0, NULL);
+            }
+
+            p->instructions[jump_to_else_idx].operand = p->count; 
+            
+            if (node->next) {
+                compile_ast(node->next, p);
+                if(jump_to_end_idx != -1) {
+                    p->instructions[jump_to_end_idx].operand = p->count;
+                }
+            }
+            break;
+        }
+        
+        case NODE_WHILE: {
+            int start_idx = p->count;
+            compile_ast(node->left, p);
+            int jump_out_idx = p->count;
+            emit(p, OP_JUMP_IF_FALSE, 0, NULL);
+            compile_ast(node->right, p);
+            emit(p, OP_JUMP, start_idx, NULL);
+            p->instructions[jump_out_idx].operand = p->count;
             break;
         }
         case NODE_HEAP_ALLOC:{
@@ -73,74 +97,76 @@ void compile_ast(ASTNode* node, IRProgram* p) {
         }
     }
 
+    // --- CRITICAL FIX: STOP DUPLICATE TRAVERSAL ---
+    // Do NOT visit 'next' if we are an IF node, because the parser 
+    // likely put the 'else' block into 'next' as well.
     if (node->next && node->type != NODE_IF) {
         compile_ast(node->next, p);
     }
 }
 
+int get_var_address(char* name, char** symbol_table, int* symbol_count) {
+    for(int i = 0; i < *symbol_count; i++) {
+        if(strcmp(symbol_table[i], name) == 0) return i;
+    }
+    symbol_table[*symbol_count] = strdup(name);
+    return (*symbol_count)++;
+}
 
 IRProgram* generate_ir(ASTNode* root) {
     IRProgram* p = (IRProgram*)malloc(sizeof(IRProgram));
     p->capacity = 32;
     p->count = 0;
     p->instructions = (IRInstruction*)malloc(sizeof(IRInstruction) * p->capacity);
-    
     compile_ast(root, p);
     emit(p, OP_HALT, 0, NULL);
     return p;
 }
 
-
-// --- Updated Helper: Find or add variable to local symbol table ---
-int get_var_address(char* name, char** symbol_table, int* symbol_count) {
-    for(int i = 0; i < *symbol_count; i++) {
-        if(strcmp(symbol_table[i], name) == 0) return i;
-    }
-    // Not found, add it
-    symbol_table[*symbol_count] = strdup(name);
-    return (*symbol_count)++;
-}
-
-// --- Updated Finalizer ---
 unsigned char* finalize_bytecode(IRProgram* p, int* out_size) {
-    unsigned char* buffer = (unsigned char*)malloc(1024); 
+    unsigned char* buffer = (unsigned char*)malloc(2048); 
     int pc = 0;
-
-    // Symbol table for this compilation (Maps variable names -> memory indices)
     char* symbol_table[256]; 
     int symbol_count = 0;
 
+    // PASS 1: Calculate Byte Offsets
+    int* offsets = (int*)malloc(sizeof(int) * (p->count + 1));
+    int current_offset = 0;
+    
+    for (int i = 0; i < p->count; i++) {
+        offsets[i] = current_offset;
+        IROpCode op = p->instructions[i].opcode;
+        switch(op) {
+            case OP_LOAD_CONST: case OP_LOAD_VAR: case OP_STORE_VAR:
+            case OP_JUMP: case OP_JUMP_IF_FALSE:
+                current_offset += 5; break;
+            default:
+                current_offset += 1; break;
+        }
+    }
+    offsets[p->count] = current_offset; 
+
+    // PASS 2: Emit Code
     for (int i = 0; i < p->count; i++) {
         IRInstruction inst = p->instructions[i];
         
         switch (inst.opcode) {
             case OP_LOAD_CONST:
-                buffer[pc++] = 0x01; // PUSH
-                memcpy(buffer + pc, &inst.operand, sizeof(int));
-                pc += 4;
-                break;
-
+                buffer[pc++] = 0x01; 
+                memcpy(buffer + pc, &inst.operand, sizeof(int)); pc += 4; break;
             case OP_LOAD_VAR: { 
-                buffer[pc++] = 0x31; // LOAD
-                // CORRECTED: Map variable name to dynamic address
+                buffer[pc++] = 0x31; 
                 int addr = get_var_address(inst.var_name, symbol_table, &symbol_count);
-                memcpy(buffer + pc, &addr, sizeof(int));
-                pc += 4;
-                break;
+                memcpy(buffer + pc, &addr, sizeof(int)); pc += 4; break;
             }
-
             case OP_STORE_VAR: { 
-                buffer[pc++] = 0x30; // STORE
-                // CORRECTED: Map variable name to dynamic address
+                buffer[pc++] = 0x30; 
                 int addr = get_var_address(inst.var_name, symbol_table, &symbol_count);
-                memcpy(buffer + pc, &addr, sizeof(int));
-                pc += 4;
-                break;
+                memcpy(buffer + pc, &addr, sizeof(int)); pc += 4; break;
             }
-
-            case OP_BINARY_ADD:
-                buffer[pc++] = 0x10; // ADD
-                break;
+            case OP_BINARY_ADD: buffer[pc++] = 0x10; break;
+            
+            case OP_COMPARE_EQ: buffer[pc++] = 0x15; break;
             
             case OP_BINARY_SUB:
                 buffer[pc++] = 0x11; // SUB (Added missing mapping)
@@ -163,34 +189,113 @@ unsigned char* finalize_bytecode(IRProgram* p, int* out_size) {
                 break;
 
             case OP_JUMP_IF_FALSE: {
-                buffer[pc++] = 0x21; // JZ (Jump if Zero)
-                memcpy(buffer + pc, &inst.operand, sizeof(int));
-                pc += 4;
-                break;
+                buffer[pc++] = 0x21; 
+                int t = offsets[inst.operand];
+                memcpy(buffer + pc, &t, sizeof(int)); pc += 4; break;
             }
-
             case OP_JUMP: {
-                buffer[pc++] = 0x20; // JMP
-                memcpy(buffer + pc, &inst.operand, sizeof(int));
-                pc += 4;
-                break;
+                buffer[pc++] = 0x20; 
+                int t = offsets[inst.operand];
+                memcpy(buffer + pc, &t, sizeof(int)); pc += 4; break;
             }
-
-            case OP_HALT:
-                buffer[pc++] = 0xFF; // HALT
-                break;
-
-            default:
-                printf("Warning: IR Opcode %d not mapped to BVM bytecode\n", inst.opcode);
-                break;
+            case OP_HALT: buffer[pc++] = 0xFF; break;
+            default: buffer[pc++] = 0x00; break;
         }
     }
     *out_size = pc;
-    
-    // Free symbol table strings to avoid leaks in the compiler
-    for(int k = 0; k < symbol_count; k++){
-        free(symbol_table[k]);
-    }
-
+    free(offsets);
+    for(int k = 0; k < symbol_count; k++) free(symbol_table[k]);
     return buffer;
+}
+
+
+//Just for printgin purposes  
+
+
+void disassemble_bytecode(unsigned char* bytecode, int length) {
+    printf("\n=== BYTECODE DISASSEMBLY ===\n");
+    int pc = 0;
+    
+    while (pc < length) {
+        unsigned char opcode = bytecode[pc];
+        printf("0x%04X:  ", pc); // Print Byte Offset
+
+        switch (opcode) {
+            // --- 5-Byte Instructions (Opcode + 4-Byte Operand) ---
+            case 0x01: { // PUSH
+                int val;
+                memcpy(&val, &bytecode[pc + 1], sizeof(int));
+                printf("PUSH %d\n", val);
+                pc += 5;
+                break;
+            }
+            case 0x30: { // STORE
+                int addr;
+                memcpy(&addr, &bytecode[pc + 1], sizeof(int));
+                printf("STORE [Addr %d]\n", addr);
+                pc += 5;
+                break;
+            }
+            case 0x31: { // LOAD
+                int addr;
+                memcpy(&addr, &bytecode[pc + 1], sizeof(int));
+                printf("LOAD [Addr %d]\n", addr);
+                pc += 5;
+                break;
+            }
+            case 0x20: { // JMP
+                int target;
+                memcpy(&target, &bytecode[pc + 1], sizeof(int));
+                printf("JMP @ 0x%04X\n", target);
+                pc += 5;
+                break;
+            }
+            case 0x21: { // JZ
+                int target;
+                memcpy(&target, &bytecode[pc + 1], sizeof(int));
+                printf("JZ @ 0x%04X\n", target);
+                pc += 5;
+                break;
+            }
+            case 0x22: { // JNZ
+                int target;
+                memcpy(&target, &bytecode[pc + 1], sizeof(int));
+                printf("JNZ @ 0x%04X\n", target);
+                pc += 5;
+                break;
+            }
+            case 0x40: { // CALL
+                int target;
+                memcpy(&target, &bytecode[pc + 1], sizeof(int));
+                printf("CALL @ 0x%04X\n", target);
+                pc += 5;
+                break;
+            }
+
+            // --- 1-Byte Instructions ---
+            case 0x02: printf("POP\n"); pc++; break;
+            case 0x03: printf("DUP\n"); pc++; break;
+            case 0x10: printf("ADD\n"); pc++; break;
+            case 0x11: printf("SUB\n"); pc++; break;
+            case 0x12: printf("MUL\n"); pc++; break;
+            case 0x13: printf("DIV\n"); pc++; break;
+           
+            case 0x41: printf("RET\n"); pc++; break;
+            // Inside disassemble_bytecode function switch(opcode):
+
+            case 0x14: printf("CMP (LT)\n"); pc++; break;
+            case 0x15: printf("EQ\n"); pc++; break; // <--- ADD THIS
+            
+            case 0xFF: 
+                printf("HALT\n"); 
+                pc++; 
+                return; // Stop printing at HALT
+
+            default:
+                printf("UNKNOWN (0x%02X)\n", opcode);
+                pc++;
+                break;
+        }
+    }
+    printf("============================\n\n");
 }

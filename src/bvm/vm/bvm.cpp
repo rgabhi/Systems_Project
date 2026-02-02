@@ -149,22 +149,6 @@ void VM::step() {
             this->st_ptr++;
             break;
         }
-        case CMP: { // CMP (eqal check)
-            if(!check_stack(2)){
-                break;
-            }
-            this->st_ptr--;
-            int b = this->stack[this->st_ptr];
-            this->st_ptr--;
-            int a = this->stack[this->st_ptr];
-            
-            
-            int res = (a < b) ? 1 : 0;
-            
-            this->stack[this->st_ptr] = res;
-            this->st_ptr++;
-            break;
-        }
 
         case STORE: //  STORE IDX
         {
@@ -207,7 +191,7 @@ void VM::step() {
             //update ptr
             this->inst_ptr = this->program + target;
             //jump to next instr
-            // continue;
+            return;
             break;
         }
         case JZ: // JZ addr
@@ -222,7 +206,7 @@ void VM::step() {
 
             if(val == 0){
                 this->inst_ptr = this->program + target;
-                // continue;
+                return;
             }
             else{
                 //
@@ -243,7 +227,7 @@ void VM::step() {
 
             if(val != 0){
                 this->inst_ptr = this->program + target;
-                // continue;
+                return;
             }
             else{
                 //
@@ -280,9 +264,9 @@ void VM::step() {
 
             // jump
             this->inst_ptr = this->program + target;
-            // continue;
+            return;
 
-            break;
+          
         }
 
         case RET: // RET
@@ -293,15 +277,17 @@ void VM::step() {
             running = false;
             break;
         }
-
-        // pop from RETURN STACK
-        this->rst_ptr--;
-        int ret_addr = this->ret_stack[this->rst_ptr];
-
-        // jump back
-        this->inst_ptr = this->program + ret_addr;
-        // continue;
-        break;
+    }
+        case CMP: { // Keep this for Less Than (<)
+            if(!check_stack(2)) break;
+            this->st_ptr--;
+            int b = this->stack[this->st_ptr];
+            this->st_ptr--;
+            int a = this->stack[this->st_ptr];
+            int res = (a < b) ? 1 : 0;
+            this->stack[this->st_ptr] = res;
+            this->st_ptr++;
+            break;
         }
         case ALLOC:
         {
@@ -316,6 +302,16 @@ void VM::step() {
             break;
 
         }
+
+        // ADD THIS NEW CASE
+       case EQ: { 
+            if(!check_stack(2)) break;
+            this->st_ptr--; int b = this->stack[this->st_ptr];
+            this->st_ptr--; int a = this->stack[this->st_ptr];
+            this->stack[this->st_ptr++] = (a == b) ? 1 : 0;
+            break;
+        }
+
         default:
             printf("Unknown Opcode %x\n", opcode);
             running = false;
