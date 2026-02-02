@@ -121,10 +121,10 @@ int apsh_debug(char **args) {
     int target_pid = atoi(args[1]);
     ManagedProgram *pgm = &registry[target_pid - 1];
 
-    if (pgm->status == TERMINATED) {
-        printf("Cannot debug a terminated program.\n");
-        return 1;
-    }
+    // if (pgm->status == TERMINATED) {
+    //     printf("Cannot debug a terminated program.\n");
+    //     return 1;
+    // }
 
     // 1. Lower AST to IR and then Bytecode
     IRProgram* ir_pgm = generate_ir(pgm->ast_root);

@@ -1,0 +1,17 @@
+// Test Variables & Logic
+var x = 10;
+var y = 20;
+var result = 0;
+
+if (x < y) {
+    result = y - x; // Should be 10
+}
+
+// Test Loop & Allocation (for GC/Memstat)
+var i = 0;
+while (i < 5) {
+    // Creating "objects" (logic depends on your parser/VM support for objects)
+    // If your language only supports ints, this loop just tests flow control.
+    result = result + 1; 
+    i = i + 1;
+}
