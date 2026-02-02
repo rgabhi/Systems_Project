@@ -1,0 +1,9 @@
+// Test Variables & Logic
+var x = 100;
+var y = 2000;
+var result = 0;
+
+if (x > y) {
+    result = y - x; 
+}
+
