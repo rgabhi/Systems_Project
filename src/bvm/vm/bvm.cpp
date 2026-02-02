@@ -6,6 +6,9 @@ VM::VM(unsigned char* bytecode) {
             this->program = bytecode;
             this->inst_ptr = bytecode;
             this->st_ptr = 0;
+            this->max_sp = 0;
+            this->total_allocs = 0;
+            this->total_freed = 0;
             this->rst_ptr = 0;
             this->instruction_cnt = 0;
             this->running = true;
@@ -351,7 +354,9 @@ void VM::step() {
             break;
 
     }
-
+    if(this->st_ptr > this->max_sp){
+        this->max_sp = this->st_ptr;
+    }
     // move to next instruction (if not stopping)
     if(running){
         this->inst_ptr++;

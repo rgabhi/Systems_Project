@@ -64,7 +64,7 @@ typedef struct {
 
 
 #define MAX_PROGRAMS 100
-extern ManagedProgram registry[MAX_PROGRAMS];
+extern ManagedProgram *registry;
 extern int program_count;
 
 #include "ir.h"

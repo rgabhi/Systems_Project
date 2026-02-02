@@ -27,13 +27,18 @@ void mark_object(Object* obj) {
 // new_int
 Object* new_int(VM* vm, int value) {
     if (vm->free_list == NULL) {
-        // Simple Fail behavior: print error and return NULL
-        // In a real VM, you might trigger GC() here automatically.
-        printf("Heap Overflow\n");
-        return NULL;
+        // 1. Attempt to reclaim memory
+        gc(vm); 
+
+        // 2. Check again: Did GC actually give us any space?
+        if (vm->free_list == NULL) {
+            printf("Heap Overflow\n");
+            return NULL;
+        }
     }
 
     Object* curr = vm->free_list;
+    vm->total_allocs++;
     vm->free_list = vm->free_list->right;
 
     curr->type = OBJ_INT;
@@ -49,13 +54,18 @@ Object* new_int(VM* vm, int value) {
 // new_pair
 Object* new_pair(VM* vm, Object* l, Object* r) {
     if (vm->free_list == NULL) {
-        // Simple Fail behavior: print error and return NULL
-        // In a real VM, you might trigger GC() here automatically.
-        printf("Heap Overflow\n");
-        return NULL;
+        // 1. Attempt to reclaim memory
+        gc(vm); 
+
+        // 2. Check again: Did GC actually give us any space?
+        if (vm->free_list == NULL) {
+            printf("Heap Overflow\n");
+            return NULL;
+        }
     }
 
     Object* curr = vm->free_list;
+    vm->total_allocs++;
     vm->free_list = vm->free_list->right;
 
     curr->type = OBJ_PAIR;
@@ -152,7 +162,7 @@ int gc(VM* vm) {
     
     // Safety check (should not happen, but good for debug)
     if (actually_reclaimed < 0) actually_reclaimed = 0;
-
+    vm->total_freed += actually_reclaimed;
     return actually_reclaimed;
 }
 

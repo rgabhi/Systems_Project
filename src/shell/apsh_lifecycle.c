@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include "apsh_module.h"
 
-ManagedProgram registry[MAX_PROGRAMS];
+ManagedProgram *registry;
 int program_count = 0;
 
 int apsh_submit(char **args) {
@@ -59,49 +62,59 @@ extern "C" {
 #endif
 
 int apsh_run(char **args) {
-    if (args[1] == NULL) {
+    pid_t pid = fork();
+    if (pid == 0){
+        if (args[1] == NULL) {
         fprintf(stderr, "Usage: run <pid>\n"); 
         return 1;
+        }
+
+        int target_pid = atoi(args[1]);
+        if (target_pid <= 0 || target_pid > program_count) {
+            fprintf(stderr, "Invalid PID\n");
+            return 1;
+        }
+
+        ManagedProgram *pgm = &registry[target_pid - 1];
+        if (pgm->status == TERMINATED) {
+            printf("Error: PID %d is terminated.\n", pgm->pid);
+            exit(1); // Important: Use exit() because we are in a child process!
+        }
+
+        printf("Lowering PID %d to IR...\n", pgm->pid);
+        
+        // Lab 3 Integration: Generate IR from the stored AST
+        IRProgram* ir_pgm = generate_ir(pgm->ast_root);
+        printAST(pgm->ast_root, 0); // Debug: Print AST structure
+        
+        printf("Dispatching to Virtual Machine...\n");
+
+        
+        
+        // 2. IR -> Bytecode (Lowering to VM format) 
+        int bcode_size;
+        int* lines = NULL;
+        unsigned char* bytecode = finalize_bytecode(ir_pgm, &bcode_size, &lines);
+
+        
+        // 3. Bytecode -> BVM Execution (Lab 4)
+        pgm->status = RUNNING;
+        execute_managed_vm(bytecode,target_pid);
+        
+        pgm->status = TERMINATED;
+        printf("Executing PID %d (%s)...\n", pgm->pid, pgm->name);
+        free(bytecode);
+        free(lines);
+        exit(0);
+
     }
-
-    int target_pid = atoi(args[1]);
-    if (target_pid <= 0 || target_pid > program_count) {
-        fprintf(stderr, "Invalid PID\n");
-        return 1;
+    else{
+        int status;
+        waitpid(pid, &status, 0);
     }
-
-    ManagedProgram *pgm = &registry[target_pid - 1];
-
-    printf("Lowering PID %d to IR...\n", pgm->pid);
     
-    // Lab 3 Integration: Generate IR from the stored AST
-    IRProgram* ir_pgm = generate_ir(pgm->ast_root);
-    printAST(pgm->ast_root, 0); // Debug: Print AST structure
     
-    printf("Dispatching to Virtual Machine...\n");
-
-      
-    
-    // 2. IR -> Bytecode (Lowering to VM format) [cite: 248, 252]
-    int bcode_size;
-    int* lines = NULL;
-    unsigned char* bytecode = finalize_bytecode(ir_pgm, &bcode_size, &lines);
-
-    
-    // 3. Bytecode -> BVM Execution (Lab 4) [cite: 255, 282]
-    pgm->status = RUNNING;
-    execute_managed_vm(bytecode,target_pid);
-    
-    pgm->status = TERMINATED;
-    printf("Executing PID %d (%s)...\n", pgm->pid, pgm->name);
-    
-    free(bytecode);
-    free(lines);
-    
-    // Lab 4 Integration point: Dispatch to VM/Execution Engine 
     return 1;
-
-
 
 }
 
@@ -126,8 +139,8 @@ int apsh_debug(char **args) {
     ManagedProgram *pgm = &registry[target_pid - 1];
 
     // if (pgm->status == TERMINATED) {
-    //     printf("Cannot debug a terminated program.\n");
-    //     return 1;
+    //         printf("Error: PID %d is terminated.\n", pgm->pid);
+    //         exit(1); // Important: Use exit() because we are in a child process!
     // }
 
     // 1. Lower AST to IR and then Bytecode
@@ -173,7 +186,10 @@ int apsh_memstat(char **args) {
     // Access the shared registry updated by the VM bridge
     printf("Memory Report for PID %d:\n", registry[idx].pid);
     printf("  Peak Stack Usage: %lld bytes\n", registry[idx].peak_stack * 8); // 8 bytes per long long
-    printf("  Heap Objects:     %d\n", registry[idx].current_objects);
+    printf("  Active Objects:     %d\n", registry[idx].current_objects);
+
+    printf("  Total Allocated:  %d\n", registry[idx].objects_allocated);
+    printf("  Total Reclaimed:  %d\n", registry[idx].objects_reclaimed);
     return 1;
 }
 
