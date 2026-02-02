@@ -337,6 +337,14 @@ void VM::step() {
             break;
         }
 
+        case NEG: {
+            if(!check_stack(1)) break;
+            this->st_ptr--;
+            int val = this->stack[this->st_ptr];
+            this->stack[this->st_ptr++] = -val;
+            break;
+        }
+
         default:
             printf("Unknown Opcode %x\n", opcode);
             running = false;

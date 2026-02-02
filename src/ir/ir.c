@@ -53,6 +53,8 @@ void compile_ast(ASTNode* node, IRProgram* p) {
 
                 // FIX: Handle !=
             else if (node->data.op == OP_NEQ) emit(p, OP_COMPARE_NEQ, 0, NULL);
+
+            else if (node->data.op == OP_NEQ) emit(p, OP_COMPARE_NEQ, 0, NULL);
             
             }
             break;
@@ -191,6 +193,7 @@ unsigned char* finalize_bytecode(IRProgram* p, int* out_size) {
             case OP_COMPARE_LE: buffer[pc++] = 0x16; break; // Map to 0x16
             case OP_COMPARE_GE: buffer[pc++] = 0x17; break; // MAP TO 0x17
             case OP_COMPARE_NEQ: buffer[pc++] = 0x18; break; // MAP TO 0x18
+            case OP_UNARY_NEG:  buffer[pc++] = 0x19; break; // MAP TO 0x19
             
             
             case OP_BINARY_SUB:
@@ -306,6 +309,7 @@ void disassemble_bytecode(unsigned char* bytecode, int length) {
             case 0x11: printf("SUB\n"); pc++; break;
             case 0x12: printf("MUL\n"); pc++; break;
             case 0x13: printf("DIV\n"); pc++; break;
+            case 0x19: printf("NEG\n"); pc++; break; // Added Display
 
            
             case 0x41: printf("RET\n"); pc++; break;

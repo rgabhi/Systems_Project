@@ -20,6 +20,7 @@ typedef enum {
     LE    = 0x16, // <=  (NEW)
     GE    = 0x17,
     NEQ   = 0x18, // != (Not Equal) - NEW
+    NEG   = 0x19, // Unary Minus (-x) - NEW
 
     STORE = 0x30,
     LOAD  = 0x31,
