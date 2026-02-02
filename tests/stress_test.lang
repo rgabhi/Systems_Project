@@ -1,0 +1,7 @@
+var i = 0;
+while (i < 200000) {
+    // Allocate a number on the heap, but don't save it to a variable.
+    // This immediately becomes "garbage" because nothing points to it!
+    var dummy = heap(i); 
+    i = i + 1;
+}
