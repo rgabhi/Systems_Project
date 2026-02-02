@@ -37,6 +37,9 @@ class VM {
 
         int ret_stack[RET_STACK_SIZE];
         int rst_ptr;
+        int max_sp;
+        int total_allocs;
+        int total_freed;
 
         //heap (accessed by GC)
         Object heap[HEAP_SIZE];
@@ -48,6 +51,7 @@ class VM {
         long long getInstructionCnt();
         void step();
         void inspect_heap_addr(long long addr);
+
         
 };
 

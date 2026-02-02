@@ -29,7 +29,7 @@ extern "C" {
         // Capture data for Lab 5 BEFORE the vm object is destroyed
         if (pid > 0 && pid <= MAX_PROGRAMS) {
             int idx = pid - 1;
-            registry[idx].peak_stack = (long long)vm.st_ptr;
+            registry[idx].peak_stack = (long long)vm.max_sp;
 
             int free_count = 0;
             Object* curr = vm.free_list;
@@ -39,8 +39,9 @@ extern "C" {
             }
             
             // HEAP_SIZE is defined in your bvm.h (usually 120000)
-            registry[idx].objects_allocated = HEAP_SIZE - free_count; 
-            registry[idx].current_objects = registry[idx].objects_allocated;
+            registry[idx].objects_allocated = vm.total_allocs; 
+            registry[idx].objects_reclaimed = vm.total_freed;
+            registry[idx].current_objects = vm.total_allocs - vm.total_freed;
             registry[idx].status = TERMINATED;
         }
 

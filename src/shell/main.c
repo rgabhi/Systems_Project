@@ -7,6 +7,7 @@
 #include<fcntl.h>   // for open(),O_CREAT ,etc.....
 #include<signal.h> // for signal, SIGINT
 #include<errno.h>  // for cmd not found
+#include <sys/mman.h>
 
 #include "apsh_module.h"
 
@@ -306,7 +307,8 @@ int main(){
     "\n\033[1;32m        AP_SHELL\033[0m\n\n"  // Green AP_SHELL centered
     );
 
-
+    registry = (ManagedProgram*) mmap(NULL, MAX_PROGRAMS*sizeof(ManagedProgram),
+     PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     while(status){
         // 1.
         // printf("||AP_SHELL||>> ");
