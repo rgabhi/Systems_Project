@@ -22,7 +22,8 @@ typedef enum {
     CALL  = 0x40,
     RET   = 0x41,
 
-    HALT  = 0xFF
+    HALT  = 0xFF,
+    ALLOC = 0x50
 } OpCode;
 
 
