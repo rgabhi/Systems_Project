@@ -47,6 +47,7 @@ class VM {
         bool check_stack(int count);
         long long getInstructionCnt();
         void step();
+        void inspect_heap_addr(long long addr);
         
 };
 
