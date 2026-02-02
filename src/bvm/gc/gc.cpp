@@ -14,14 +14,38 @@ void mark_object(Object* obj) {
     
     obj->marked = true;
     
-    // recursively mark
-    mark_object(obj->left);
-    mark_object(obj->right);
+    if(obj->type == OBJ_PAIR){
+        // recursively mark
+        mark_object(obj->left);
+        mark_object(obj->right);
+    } 
 }
 
 // --- wrappers ---
 
 // HEAP
+// new_int
+Object* new_int(VM* vm, int value) {
+    if (vm->free_list == NULL) {
+        // Simple Fail behavior: print error and return NULL
+        // In a real VM, you might trigger GC() here automatically.
+        printf("Heap Overflow\n");
+        return NULL;
+    }
+
+    Object* curr = vm->free_list;
+    vm->free_list = vm->free_list->right;
+
+    curr->type = OBJ_INT;
+    curr->value = value;
+    curr->left = NULL;
+    curr->right = NULL;
+    curr->marked = false;
+
+    return curr;
+}
+
+
 // new_pair
 Object* new_pair(VM* vm, Object* l, Object* r) {
     if (vm->free_list == NULL) {
@@ -34,6 +58,7 @@ Object* new_pair(VM* vm, Object* l, Object* r) {
     Object* curr = vm->free_list;
     vm->free_list = vm->free_list->right;
 
+    curr->type = OBJ_PAIR;
     curr->left = l;
     curr->right = r;
     curr->marked = false;

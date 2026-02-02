@@ -74,6 +74,12 @@ ASTNode *createUnaryNode(OpType op, ASTNode *left){
     return node;
 }
 
+ASTNode *createHeapAllocNode(ASTNode *exp){
+    ASTNode* node = createNode(NODE_HEAP_ALLOC);
+    node->left = exp;
+    return node;
+}
+
 const char* getOpSymbol(OpType op) {
     switch(op) {
         case OP_PLUS: return "+";

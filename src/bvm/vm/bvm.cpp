@@ -303,6 +303,19 @@ void VM::step() {
         // continue;
         break;
         }
+        case ALLOC:
+        {
+            // 1. Pop the value (the integer size/value) from the stack
+            int val = (int)this->stack[--this->st_ptr];
+
+            // 2. Allocate the object on the heap using our new GC function
+            Object* obj = new_int(this, val);
+
+            // 3. Push the new Object's memory address back onto the stack
+            this->stack[this->st_ptr++] = (long long)obj;
+            break;
+
+        }
         default:
             printf("Unknown Opcode %x\n", opcode);
             running = false;

@@ -11,7 +11,8 @@ typedef enum {
     OP_COMPARE_EQ, OP_COMPARE_LT, OP_COMPARE_GT,
     OP_JUMP,       // Unconditional jump
     OP_JUMP_IF_FALSE,
-    OP_HALT
+    OP_HALT,
+    OP_ALLOC //heap action
 } IROpCode;
 
 typedef struct {

@@ -66,6 +66,11 @@ void compile_ast(ASTNode* node, IRProgram* p) {
             p->instructions[jump_patch_idx].operand = p->count; // Patch offset
             break;
         }
+        case NODE_HEAP_ALLOC:{
+            compile_ast(node->left, p);
+            emit(p, OP_ALLOC, 0, NULL);
+            break;
+        }
     }
 
     if (node->next && node->type != NODE_IF) {
@@ -151,6 +156,10 @@ unsigned char* finalize_bytecode(IRProgram* p, int* out_size) {
 
             case OP_COMPARE_LT:
                 buffer[pc++] = 0x14; // CMP
+                break;
+            
+            case OP_ALLOC:
+                buffer[pc++] = 0x50; // ALLOC
                 break;
 
             case OP_JUMP_IF_FALSE: {
