@@ -21,6 +21,7 @@ typedef enum {
     GE    = 0x17,
     NEQ   = 0x18, // != (Not Equal) - NEW
     NEG   = 0x19, // Unary Minus (-x) - NEW
+    DEREF = 0x1E, // NEW: Read from Heap
 
     STORE = 0x30,
     LOAD  = 0x31,

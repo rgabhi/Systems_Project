@@ -24,7 +24,7 @@ extern "C" {
             printf("Final VM stack top: %lld\n", (long long)vm.stack[vm.st_ptr - 1]);
         }else{
             printf("Stack: [Empty]\n");
-            printf("Memory[0] %d\n", vm.memory[0]);
+            printf("Memory[0] %lld\n", vm.memory[0]);
         }
         // Capture data for Lab 5 BEFORE the vm object is destroyed
         if (pid > 0 && pid <= MAX_PROGRAMS) {

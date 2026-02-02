@@ -24,7 +24,8 @@ typedef enum {
 typedef enum {
     OP_PLUS, OP_MINUS, OP_MULT, OP_DIV,
     OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LE, OP_GE,
-    OP_NEG // for unary minus (-)
+    OP_NEG, // for unary minus (-)
+    OP_DEREF // NEW: For @ operator
 } OpType;
 
 // Node Structure

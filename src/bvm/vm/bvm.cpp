@@ -157,7 +157,7 @@ void VM::step() {
         {
             // pop val from stack
             this->st_ptr--;
-            int val =this->stack[this->st_ptr];
+           long long int val =this->stack[this->st_ptr];
             // get idx 
             int idx = *(int *) (this->inst_ptr + 1);
             this->memory[idx] = val;
@@ -176,7 +176,7 @@ void VM::step() {
             int idx = *(int *)(this->inst_ptr + 1);
             
             // read val from memory
-            int val = this->memory[idx];
+            long long int val = this->memory[idx];
             // push to stack
             this->stack[this->st_ptr] = val;
             this->st_ptr++;
@@ -345,6 +345,35 @@ void VM::step() {
             this->st_ptr--;
             int val = this->stack[this->st_ptr];
             this->stack[this->st_ptr++] = -val;
+            break;
+        }
+
+        case DEREF: // 0x1E
+        {
+            if(!check_stack(1)) break;
+            
+            // 1. Pop the Raw Address (long long)
+            this->st_ptr--;
+            long long addr = this->stack[this->st_ptr];
+
+            printf("addr---->%lld",addr);
+
+            // 2. Cast the integer back to an Object Pointer
+            Object* obj_ptr = (Object*)addr;
+
+            // 3. Safety Check: Ensure this pointer is actually inside our heap array
+            //    (Pointer Arithmetic: address comparison)
+            if (obj_ptr < this->heap || obj_ptr >= (this->heap + HEAP_SIZE)) {
+                printf("Error: Segmentation Fault (Address %lld is out of heap bounds)\n", addr);
+                running = false;
+                break;
+            }
+
+            // 4. Access the value
+            int val = obj_ptr->value;
+            
+            // 5. Push the value back to the stack
+            this->stack[this->st_ptr++] = val;
             break;
         }
 
