@@ -11,6 +11,7 @@ typedef enum {
     MUL   = 0x12,
     DIV   = 0x13,
     CMP   = 0x14,
+    EQ    = 0x15, // NEW: Used for Equality (==)
 
     JMP   = 0x20,
     JZ    = 0x21,
