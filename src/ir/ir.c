@@ -117,6 +117,12 @@ void compile_ast(ASTNode* node, IRProgram* p) {
                 compile_ast(node->left, p);      // Push X
                 emit(p, OP_BINARY_SUB, 0, NULL, node->lineNumber); // 0 - X
             }
+                 // NEW: Handle @
+           else if (node->data.op == OP_DEREF) {
+                // Handle Dereference (@x or *x)
+                compile_ast(node->left, p);      // 1. Evaluate the expression (get the address)
+                emit(p, OP_IR_DEREF, 0, NULL, node->lineNumber);   // 2. Emit the DEREF instruction
+            }
             break;
     }
 
@@ -197,6 +203,8 @@ unsigned char* finalize_bytecode(IRProgram* p, int* out_size, int** out_lines) {
             case OP_COMPARE_GE: buffer[pc++] = 0x17; break; // MAP TO 0x17
             case OP_COMPARE_NEQ: buffer[pc++] = 0x18; break; // MAP TO 0x18
             case OP_UNARY_NEG:  buffer[pc++] = 0x19; break; // MAP TO 0x19
+            
+            case OP_IR_DEREF: buffer[pc++] = 0x1E; break; // Map to 0x1E
             
             
             case OP_BINARY_SUB:
@@ -325,6 +333,9 @@ void disassemble_bytecode(unsigned char* bytecode, int length) {
             case 0x15: printf("EQ\n"); pc++; break; // <--- ADD THIS
 
             case 0x16: printf("LE (<=)\n"); pc++; break;
+
+            case 0x1E: printf("DEREF (@)\n"); pc++; break;
+          
             
             case 0xFF: 
                 printf("HALT\n"); 

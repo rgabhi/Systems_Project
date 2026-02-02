@@ -40,6 +40,8 @@
 "{"     { return LBRACE; }
 "}"     { return RBRACE; }
 
+"@"   { return '@'; }
+
 [0-9]+ { 
     yylval.intValue = atoi(yytext); // convert to int 
     return INTEGER; 

@@ -258,6 +258,7 @@ unary:
     primary { $$ = $1; }
     | MINUS unary { $$ = createUnaryNode(OP_NEG, $2); } /* Handles -5 or -x */
     | PLUS unary  { $$ = $2; } /* Unary plus does nothing */
+    |'@' unary   { $$ = createUnaryNode(OP_DEREF, $2); } /* Dereference @x */
     ;
 
 primary:

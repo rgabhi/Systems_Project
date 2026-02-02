@@ -1,0 +1,11 @@
+// heap_test.lang
+var x=0;
+var h = heap(1234);
+
+
+if(@h==12394){
+    x=@h;
+}else{
+    x=1000;
+}
+
