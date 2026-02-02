@@ -328,3 +328,27 @@ void VM::step() {
         this->inst_ptr++;
     }
 }
+
+void VM::inspect_heap_addr(long long addr) {
+    // 1. Cast the integer address back to an Object pointer
+    Object* obj = (Object*)addr;
+
+    // 2. Safety Check: Ensure the address is actually inside our heap array
+    // (This prevents segfaults if we type a wrong number)
+    if (obj < this->heap || obj >= (this->heap + HEAP_SIZE)) {
+        printf("Error: Address %lld is not within the managed heap.\n", addr);
+        return;
+    }
+
+    // 3. Print the details
+    printf("Object at address %lld:\n", addr);
+    if (obj->type == OBJ_INT) {
+        printf("  [Type]: INT\n");
+        printf("  [Value]: %d\n", obj->value);
+    } else if (obj->type == OBJ_PAIR) {
+        printf("  [Type]: PAIR\n");
+        printf("  [Left]: %p, [Right]: %p\n", (void*)obj->left, (void*)obj->right);
+    } else {
+        printf("  [Type]: UNKNOWN (Tag: %d)\n", obj->type);
+    }
+}

@@ -52,7 +52,7 @@ extern "C" {
         std::vector<int> breakpoints; // List of PC offsets
 
         printf("\n=== BVM Debugger: PID %d ===\n", pid);
-        printf("Commands: [s]tep, [c]ontinue, [b]reak <addr>, [r]egs, [m]emstat, [q]uit\n");
+        printf("Commands: [s]tep, [c]ontinue, [b]reak <addr>, [i]nspect <addr>, [m]emstat, [q]uit\n");
 
         while (vm.running) {
             int current_pc = (int)(vm.inst_ptr - vm.program);
@@ -99,6 +99,18 @@ extern "C" {
             else if (input[0] == 'g') { // Force Garbage Collection
                 int reclaimed = gc(&vm);
                 printf("  [GC] Reclaimed %d objects.\n", reclaimed);
+            }
+            else if (strncmp(input, "inspect", 7) == 0 || cmd == 'i') {
+                long long addr;
+                // Parse the address from the input string (supports "i 12345")
+                // We use a simple scan starting after the first character
+                // Note: If typing "inspect 123", this simplistic parsing might require "i 123"
+                // but let's stick to the "i <addr>" pattern for now.
+                if (sscanf(input + 1, "%lld", &addr) == 1) { 
+                    vm.inspect_heap_addr(addr);
+                } else {
+                    printf("Usage: i <address>\n");
+                }
             }
         }
         printf("=== Debugger Session Terminated ===\n");
