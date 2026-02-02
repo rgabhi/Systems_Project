@@ -26,7 +26,13 @@ INTEGRATED_SRCS = src/shell/main.c \
 # Flags
 CFLAGS_INT = -I src/shell -I src/parser -I src/bvm/vm -I src/bvm/gc -I src/bvm/assembler -I src/ir -g
 
+# --- Parser Generation (The Missing Ingredient!) ---
+parser:
+	bison -d -o src/parser/parser.tab.c src/parser/parser.y
+	flex -o src/parser/lex.yy.c src/parser/lexer.l
+
 # Build Rule
 # We use g++ to link because we have .cpp files mixed with .c files
 $(TARGETM): parser
-	g++ $(CFLAGS_INT) $(INTEGRATED_SRCS) -o $(TARGETM) -lfl
+	g++ $(CFLAGS_INT) $(INTEGRATED_SRCS) -o $(TARGETM) 
+#-lfl removed: Since we are providing our own main function in the shell, we don't need the default one from the library either
