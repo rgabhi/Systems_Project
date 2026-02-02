@@ -1,0 +1,2 @@
+// heap_test.lang
+var h = heap(1234);
