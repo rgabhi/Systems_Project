@@ -36,6 +36,7 @@ Object* pop(VM* vm);
 
 // Triggers Mark-Sweep Garbage Collector
 int gc(VM* vm);
+int get_reachable_count(VM* vm);
 
 // Helper macro for convention
 #define VAL_OBJ(x) (x)

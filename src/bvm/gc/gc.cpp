@@ -166,3 +166,38 @@ int gc(VM* vm) {
     return actually_reclaimed;
 }
 
+
+
+int get_reachable_count(VM* vm) {
+    // 1. Reset: Ensure no leftover marks exist (start fresh)
+    for (int i = 0; i < HEAP_SIZE; i++) {
+        vm->heap[i].marked = false;
+    }
+
+    // 2. Mark: Scan the stack to find all reachable objects
+    // (This logic is identical to the Mark phase in your GC)
+    for (int i = 0; i < vm->st_ptr; i++) {
+        Object* obj = (Object*)vm->stack[i];
+        
+        // Safety check: Is this stack value actually a pointer to our heap?
+        if (obj >= vm->heap && obj < vm->heap + HEAP_SIZE) {
+            mark_object(obj);
+        }
+    }
+
+    // 3. Count: Tally up everything we just marked
+    int count = 0;
+    for (int i = 0; i < HEAP_SIZE; i++) {
+        if (vm->heap[i].marked) {
+            count++;
+        }
+    }
+
+    // 4. Cleanup: Unmark everything so we don't break the next real GC!
+    for (int i = 0; i < HEAP_SIZE; i++) {
+        vm->heap[i].marked = false;
+    }
+
+    return count;
+}
+

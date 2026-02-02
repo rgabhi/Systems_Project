@@ -219,9 +219,17 @@ int apsh_gc(char **args) {
 // Analyzes memory behavior and identifies potential leaks
 int apsh_leaks(char **args) {
     if (args[1] == NULL) return (printf("Usage: leaks <pid>\n"), 1);
+    
     ManagedProgram *p = &registry[atoi(args[1]) - 1];
+    
+    int active = p->objects_allocated - p->objects_reclaimed;
+    int reachable = p->objects_reachable;
+    int garbage = active - reachable; // The forensic result!
+
     printf("Leak Analysis for PID %s:\n", args[1]);
-    printf("  Unreclaimed Objects: %d\n", p->objects_allocated - p->objects_reclaimed);
+    printf("  Active Objects:    %d\n", active);
+    printf("  Reachable Globals: %d\n", reachable);
+    printf("  True Garbage:      %d  <-- (These are the actual leaks)\n", garbage);
     return 1;
 }
 
