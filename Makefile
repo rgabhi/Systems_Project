@@ -37,5 +37,4 @@ $(TARGETM): parser
 	g++ $(CFLAGS_INT) $(INTEGRATED_SRCS) -o $(TARGETM) 
 #-lfl removed: Since we are providing our own main function in the shell, we don't need the default one from the library either
 
-clean:
-    rm -f $(TARGETM) src/parser/parser.tab.c src/parser/parser.tab.h src/parser/lex.yy.c
+clean: ; rm -f $(TARGETM) src/parser/parser.tab.c src/parser/parser.tab.h src/parser/lex.yy.c
