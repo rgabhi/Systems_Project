@@ -276,21 +276,6 @@ Executing PID 1 (tests/demo.lang)...
 Execution completed successfully
 ```
 
-#### 3. List Programs
-
-View all registered programs:
-
-```bash
-AP_SHELL >> list
-```
-
-**Output:**
-```
-PID  Status    File
----  ------    ----
-1    Ready     tests/heap_test.lang
-2    Running   tests/loops.lang
-```
 
 ### Debugging
 
