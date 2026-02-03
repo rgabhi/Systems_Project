@@ -113,6 +113,8 @@ extern "C" {
             else if (strncmp(input, "inspect", 7) == 0 || cmd == 'i') {
                 long long addr;
                 // Parse the address from the input string (supports "i 12345")
+                // We use a simple scan starting after the first character
+              
                 if (sscanf(input + 1, "%lld", &addr) == 1) { 
                     vm.inspect_heap_addr(addr);
                 } else {

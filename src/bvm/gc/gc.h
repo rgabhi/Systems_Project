@@ -11,8 +11,8 @@ typedef enum { OBJ_PAIR, OBJ_INT } ObjectType;
 
 struct Object {
     bool marked;       // Mark bit
-    ObjectType type;   // New: Track what this object is
-    int value;         // New: Store the integer data here
+    ObjectType type;   //  Track what this object is
+    int value;         //  Store the integer data here
     Object* left;      // Reference 1 // Only used if type == OBJ_PAIR
     Object* right;     // Reference 2
 };

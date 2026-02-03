@@ -47,12 +47,12 @@ void compile_ast(ASTNode* node, IRProgram* p) {
                 else if (node->data.op == OP_DIV) emit(p, OP_BINARY_DIV, 0, NULL, node->lineNumber);
                 else if (node->data.op == OP_LT) emit(p, OP_COMPARE_LT, 0, NULL, node->lineNumber);
                 else if (node->data.op == OP_EQ) emit(p, OP_COMPARE_EQ, 0, NULL, node->lineNumber);
-                // FIX: Handle <=
+               
                 else if (node->data.op == OP_LE) emit(p, OP_COMPARE_LE, 0, NULL, node->lineNumber);
-                // FIX: Use dedicated GE opcode
+                
                 else if (node->data.op == OP_GE) emit(p, OP_COMPARE_GE, 0, NULL, node->lineNumber);
 
-                // FIX: Handle !=
+                
             else if (node->data.op == OP_NEQ) emit(p, OP_COMPARE_NEQ, 0, NULL, node->lineNumber);
 
             else if (node->data.op == OP_NEQ) emit(p, OP_COMPARE_NEQ, 0, NULL, node->lineNumber);
@@ -117,7 +117,7 @@ void compile_ast(ASTNode* node, IRProgram* p) {
                 compile_ast(node->left, p);      // Push X
                 emit(p, OP_BINARY_SUB, 0, NULL, node->lineNumber); // 0 - X
             }
-                 // NEW: Handle @
+                 // Handle @
            else if (node->data.op == OP_DEREF) {
                 // Handle Dereference (@x or *x)
                 compile_ast(node->left, p);      // 1. Evaluate the expression (get the address)
@@ -126,7 +126,7 @@ void compile_ast(ASTNode* node, IRProgram* p) {
             break;
     }
 
-    // --- CRITICAL FIX: STOP DUPLICATE TRAVERSAL ---
+   
     // Do NOT visit 'next' if we are an IF node, because the parser 
     // likely put the 'else' block into 'next' as well.
     if (node->next && node->type != NODE_IF) {

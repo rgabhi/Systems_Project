@@ -11,17 +11,17 @@ typedef enum {
     MUL   = 0x12,
     DIV   = 0x13,
     CMP   = 0x14,
-    EQ    = 0x15, // NEW: Used for Equality (==)
+    EQ    = 0x15, //Used for Equality (==)
 
     JMP   = 0x20,
     JZ    = 0x21,
     JNZ   = 0x22,
 
-    LE    = 0x16, // <=  (NEW)
+    LE    = 0x16, 
     GE    = 0x17,
-    NEQ   = 0x18, // != (Not Equal) - NEW
-    NEG   = 0x19, // Unary Minus (-x) - NEW
-    DEREF = 0x1E, // NEW: Read from Heap
+    NEQ   = 0x18, // != (Not Equal) 
+    NEG   = 0x19, // Unary Minus (-x) 
+    DEREF = 0x1E, //  Read from Heap
 
     STORE = 0x30,
     LOAD  = 0x31,
