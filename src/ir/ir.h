@@ -9,12 +9,12 @@ typedef enum {
     OP_STORE_VAR,  // Save to variable
     OP_BINARY_ADD, OP_BINARY_SUB, OP_BINARY_MUL, OP_BINARY_DIV,
     OP_COMPARE_EQ, OP_COMPARE_LT, OP_COMPARE_GT,
-    OP_COMPARE_LE , // NEW: For <=
-    OP_COMPARE_GE, // NEW: For >=
-    OP_COMPARE_NEQ, // NEW
-    OP_UNARY_NEG, // NEW: For -x
+    OP_COMPARE_LE , // For <=
+    OP_COMPARE_GE, // For >=
+    OP_COMPARE_NEQ, 
+    OP_UNARY_NEG, //  For -x
 
-    OP_IR_DEREF, // NEW
+    OP_IR_DEREF, 
 
     OP_JUMP,       // Unconditional jump
     OP_JUMP_IF_FALSE,

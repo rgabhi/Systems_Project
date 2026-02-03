@@ -4,8 +4,6 @@
 
 
 
-// --- Helper func ---
-
 // mark_obj
 void mark_object(Object* obj) {
     if (obj == NULL || obj->marked) {
