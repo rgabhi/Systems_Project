@@ -78,21 +78,21 @@ int apsh_run(char **args) {
 
         ManagedProgram *pgm = &registry[target_pid - 1];
         if (pgm->status == TERMINATED) {
-            printf("Error: PID %d is terminated.\n", pgm->pid);
+            printf("Error: PID %d terminated.\n", pgm->pid);
             exit(1); // Important: Use exit() because we are in a child process!
         }
-
+        printf("Executing PID %d (%s)...\n", pgm->pid, pgm->name);
         printf("Lowering PID %d to IR...\n", pgm->pid);
         
-        // Lab 3 Integration: Generate IR from the stored AST
+        // generate IR from the stored AST
         IRProgram* ir_pgm = generate_ir(pgm->ast_root);
-        printAST(pgm->ast_root, 0); // Debug: Print AST structure
+        // printAST(pgm->ast_root, 0); // debugg
         
-        printf("Dispatching to Virtual Machine...\n");
+        printf("Dispatching to VM...\n");
 
         
         
-        // 2. IR -> Bytecode (Lowering to VM format) 
+        // 2. IR -> Bytecode
         int bcode_size;
         int* lines = NULL;
         unsigned char* bytecode = finalize_bytecode(ir_pgm, &bcode_size, &lines);
@@ -103,7 +103,6 @@ int apsh_run(char **args) {
         execute_managed_vm(bytecode,target_pid);
         
         pgm->status = TERMINATED;
-        printf("Executing PID %d (%s)...\n", pgm->pid, pgm->name);
         free(bytecode);
         free(lines);
         exit(0);

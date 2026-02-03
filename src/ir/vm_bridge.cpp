@@ -1,24 +1,23 @@
-#include "bvm.h" // Your existing BVM header
-#include "ir.h"     // Your Shell IR header
+#include "bvm.h"
+#include "ir.h"     
 #include "apsh_module.h"
 
 
 extern "C" {
 
     void execute_managed_vm(unsigned char* bytecode,int pid) {
-        // Instantiate your existing C++ VM class
+        
         VM vm(bytecode);
-
         unsigned char * prog=bytecode;
 
-        disassemble_bytecode(bytecode, 1024); 
+        // disassemble_bytecode(bytecode, 1024); // debugging
 
-        for(int i=0;prog[i]!='\0';i++){
-            printf("Bytecode[%d]: 0x%02X\n", i, prog[i]);
-        }
+        // for(int i=0;prog[i]!='\0';i++){
+        //     printf("Bytecode[%d]: 0x%02X\n", i, prog[i]);
+        // }
         
-        printf("--- BVM managed execution starting ---\n");
-        vm.run(); // Call your existing run loop
+        printf("--- BVM managed exec starting ---\n");
+        vm.run(); // run loop
         
        if(vm.st_ptr > 0) {   
             printf("Final VM stack top: %lld\n", (long long)vm.stack[vm.st_ptr - 1]);
@@ -26,7 +25,7 @@ extern "C" {
             printf("Stack: [Empty]\n");
             printf("Memory[0] %lld\n", vm.memory[0]);
         }
-        // Capture data for Lab 5 BEFORE the vm object is destroyed
+        // capture data the vm object is destroyed
         if (pid > 0 && pid <= MAX_PROGRAMS) {
             int idx = pid - 1;
             registry[idx].peak_stack = (long long)vm.max_sp;
@@ -38,7 +37,7 @@ extern "C" {
                 curr = curr->right;
             }
             
-            // HEAP_SIZE is defined in your bvm.h (usually 120000)
+            // HEAP_SIZE defined in bvm.h 
             registry[idx].objects_allocated = vm.total_allocs; 
             registry[idx].objects_reclaimed = vm.total_freed;
             registry[idx].objects_reachable = get_reachable_count(&vm);
@@ -46,7 +45,7 @@ extern "C" {
             registry[idx].status = TERMINATED;
         }
 
-        printf("--- BVM execution complete [Stats Saved] ---\n");
+        printf("--- BVM exec complete ---\n");
     }
 }
  
@@ -60,7 +59,7 @@ extern "C" {
     void debug_managed_vm(unsigned char* bytecode, int* lines, int pid) {
         VM vm(bytecode);
         char input[128];
-        std::vector<int> breakpoints; // List of PC offsets
+        std::vector<int> breakpoints; // list of PC offsets
 
         printf("\n=== BVM Debugger: PID %d ===\n", pid);
         printf("Commands: [s]tep, [c]ontinue, [b]reak <addr>, [i]nspect <addr>, [m]emstat, [q]uit\n");
@@ -74,29 +73,29 @@ extern "C" {
 
             if (cmd == 'q') break;
             
-            if (cmd == 'b') { // Set Breakpoint
+            if (cmd == 'b') { // set breakpoint
                 int addr;
                 if (sscanf(input + 2, "%d", &addr) == 1) {
                     breakpoints.push_back(addr);
                     printf("Breakpoint set at byte offset %d\n", addr);
                 }
             } 
-            else if (cmd == 's') { // Single Step
+            else if (cmd == 's') { // single Step
                 vm.step();
                 if (vm.st_ptr > 0) printf("  Stack Top: %lld\n", vm.stack[vm.st_ptr-1]);
             } 
-            else if (cmd == 'r') { // Inspect Registers
+            else if (cmd == 'r') { // inspect regs
                 printf("  PC: %d | SP: %d | Inst Count: %lld\n", 
                        current_pc, vm.st_ptr, vm.instruction_cnt);
             }
-            // --- ADDED MEMSTAT COMMAND ---
+            // --- MEMSTAT new cmd ---
             else if (strncmp(input, "memstat", 7) == 0 || cmd == 'm') {
                 int free_slots = count_free_list(&vm);
                 int used = HEAP_SIZE - free_slots;
                 printf("  [Heap] Used Objects: %d / %d\n", used, HEAP_SIZE);
                 printf("  [Stack] Depth: %d\n", vm.st_ptr);
             } 
-            else if (cmd == 'c') { // Continue until breakpoint or halt
+            else if (cmd == 'c') { // continue until breakpoint or halt
                 vm.step(); // Step once to move past current breakpoint
                 while (vm.running) {
                     current_pc = (int)(vm.inst_ptr - vm.program);
@@ -114,9 +113,6 @@ extern "C" {
             else if (strncmp(input, "inspect", 7) == 0 || cmd == 'i') {
                 long long addr;
                 // Parse the address from the input string (supports "i 12345")
-                // We use a simple scan starting after the first character
-                // Note: If typing "inspect 123", this simplistic parsing might require "i 123"
-                // but let's stick to the "i <addr>" pattern for now.
                 if (sscanf(input + 1, "%lld", &addr) == 1) { 
                     vm.inspect_heap_addr(addr);
                 } else {

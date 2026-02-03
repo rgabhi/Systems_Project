@@ -32,7 +32,7 @@ class VM {
         int st_ptr; // stack ptr
 
         // memory
-        long long int memory[MEM_SIZE];
+        long long memory[MEM_SIZE];
 
 
         int ret_stack[RET_STACK_SIZE];
