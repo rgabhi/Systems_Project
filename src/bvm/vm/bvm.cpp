@@ -157,7 +157,7 @@ void VM::step() {
         {
             // pop val from stack
             this->st_ptr--;
-           long long int val =this->stack[this->st_ptr];
+            long long val =this->stack[this->st_ptr];
             // get idx 
             int idx = *(int *) (this->inst_ptr + 1);
             this->memory[idx] = val;
@@ -176,7 +176,7 @@ void VM::step() {
             int idx = *(int *)(this->inst_ptr + 1);
             
             // read val from memory
-            long long int val = this->memory[idx];
+            long long val = this->memory[idx];
             // push to stack
             this->stack[this->st_ptr] = val;
             this->st_ptr++;

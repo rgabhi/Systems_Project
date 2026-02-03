@@ -184,6 +184,15 @@ int get_reachable_count(VM* vm) {
             mark_object(obj);
         }
     }
+    // 2b. Mark: Scan Global Memory (The missing piece!)
+    for (int i = 0; i < MEM_SIZE; i++) {
+        Object* obj = (Object*)vm->memory[i]; // Cast int to ptr
+
+        // Safety check: Is this pointing to our heap?
+        if (obj >= vm->heap && obj < vm->heap + HEAP_SIZE) {
+            mark_object(obj);
+        }
+    }
 
     // 3. Count: Tally up everything we just marked
     int count = 0;
