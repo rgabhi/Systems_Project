@@ -7,20 +7,20 @@
 
 ## 📋 Table of Contents
 
-- [Overview](#🚀-overview)
-- [Key Features](#✨-key-features)
-- [Project Structure](#📂-project-structure)
-- [Getting Started](#🚀-getting-started)
+- [Overview](#-overview)
+- [Key Features](#-key-features)
+- [Project Structure](#-project-structure)
+- [Getting Started](#-getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
-- [Usage Guide](#💻-usage-guide)
+- [Usage Guide](#-usage-guide)
   - [Shell Commands](#shell-commands)
   - [Script Execution](#script-execution)
   - [Debugging](#debugging)
-- [AP Language Reference](#📝-ap-language-reference)
-- [Architecture](#🏗️-architecture)
-- [Examples](#📚-examples)
-- [Technical Details](#🔧-technical-details)
+- [AP Language Reference](#-ap-language-reference)
+- [Architecture](#-architecture)
+- [Examples](#-examples)
+- [Technical Details](#-technical-details)
 
 ---
 
@@ -465,34 +465,34 @@ if (@h == 42) {
 
 #### Core Instructions
 
-| Opcode | Operands | Description |
-|--------|----------|-------------|
-| `PUSH` | `<value>` | Push immediate value onto stack |
-| `POP` | - | Remove top of stack |
+| Opcode  | Operands | Description |
+|---------|----------|-------------|
+| `PUSH`  | `<value>` | Push immediate value onto stack |
+| `POP`   | - | Remove top of stack |
 | `STORE` | `<var_id>` | Store top of stack to variable |
-| `LOAD` | `<var_id>` | Load variable onto stack |
-| `ADD` | - | Pop two values, push sum |
-| `SUB` | - | Pop two values, push difference |
-| `MUL` | - | Pop two values, push product |
-| `DIV` | - | Pop two values, push quotient |
-| `MOD` | - | Pop two values, push remainder |
+| `LOAD`  | `<var_id>` | Load variable onto stack |
+| `ADD`   | - | Pop two values, push sum |
+| `SUB`   | - | Pop two values, push difference |
+| `MUL`   | - | Pop two values, push product |
+| `DIV`   | - | Pop two values, push quotient |
+| `MOD`   | - | Pop two values, push remainder |
 
 #### Control Flow
 
-| Opcode | Operands | Description |
-|--------|----------|-------------|
-| `JMP` | `<label>` | Unconditional jump |
-| `JZ` | `<label>` | Jump if top of stack is zero |
-| `JNZ` | `<label>` | Jump if top of stack is non-zero |
-| `CMP` | - | Compare top two stack values |
+| Opcode | Operands  | Description |
+|--------|-----------|-------------|
+| `JMP`  | `<label>` | Unconditional jump |
+| `JZ`   | `<label>` | Jump if top of stack is zero |
+| `JNZ`  | `<label>` | Jump if top of stack is non-zero |
+| `CMP`  | - | Compare top two stack values |
 
 #### Memory Operations
 
-| Opcode | Operands | Description |
-|--------|----------|-------------|
+| Opcode  | Operands | Description |
+|---------|----------|-------------|
 | `ALLOC` | - | Allocate heap object with value from stack |
 | `DEREF` | - | Dereference pointer on stack |
-| `FREE` | `<addr>` | Mark object for garbage collection |
+| `FREE`  | `<addr>` | Mark object for garbage collection |
 
 ---
 
