@@ -20,7 +20,7 @@ ASTNode* parse_program(const char* filename) {
     fclose(file);
 
     if (result == 0) {
-        return root; // Return the AST root built during yyparse
+        return root; // return ast root built during yyparse
     }
     return NULL;
 }

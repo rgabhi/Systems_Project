@@ -154,13 +154,12 @@ void test_cd() {
     getcwd(cwd, sizeof(cwd));
     
     // 1. Get the parent directory path string manually
-    //    (So we know what to look for)
     char *last_slash = strrchr(cwd, '/');
     if (last_slash) *last_slash = '\0'; // Strip the last folder name
     char *parent_dir = cwd;
 
     // 2. Send "cd .." AND "pwd" to the shell in one session
-    //    We check if the SHELL'S output contains the new path.
+    //    check if the SHELL'S output contains the new path.
     run_shell_test("cd ..\npwd", buf);
     
     // 3. Verify the SHELL printed the parent directory
