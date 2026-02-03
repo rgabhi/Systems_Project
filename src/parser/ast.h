@@ -25,10 +25,10 @@ typedef enum {
     OP_PLUS, OP_MINUS, OP_MULT, OP_DIV,
     OP_EQ, OP_NEQ, OP_LT, OP_GT, OP_LE, OP_GE,
     OP_NEG, // for unary minus (-)
-    OP_DEREF // NEW: For @ operator
+    OP_DEREF // for @ operator
 } OpType;
 
-// Node Structure
+// Node Struct
 typedef struct ASTNode {
     NodeType type;
     int lineNumber;
@@ -38,7 +38,7 @@ typedef struct ASTNode {
     struct ASTNode *next; // used for list of statements
 
 
-    // Data specific to node
+    // data specific to node
     union{
         int intValue; // for ints
         char *idName; // for var names
@@ -59,11 +59,11 @@ ASTNode* createWhileNode(ASTNode *cond, ASTNode *body);
 ASTNode* createBlockNode(ASTNode *statementList);
 ASTNode* createHeapAllocNode(ASTNode *exp);
 
-extern ASTNode* root; // This should be a global variable in your parser.y
+extern ASTNode* root;
 
 
 
 void freeAST(ASTNode *node);
-void printAST(ASTNode *node, int level); // helper to visualize tree
+void printAST(ASTNode *node, int level);
 
 #endif

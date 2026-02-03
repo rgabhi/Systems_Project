@@ -39,26 +39,24 @@
 
 
 typedef struct ASTNode ASTNode; 
-extern ASTNode* parse_program(const char* filename); // Your Lab 2 entry function
+extern ASTNode* parse_program(const char* filename);
 
-// --- Integration Assignment Structures ---
 typedef enum { SUBMITTED, RUNNING, PAUSED, TERMINATED } ProgramStatus;
 
 
 typedef struct {
-    int pid;               // Custom Program ID 
-    char *name;            // Program filename
-    ProgramStatus status;  // Current lifecycle state
+    int pid;               // prog ID 
+    char *name;            // prog filename
+    ProgramStatus status;  // curr lifecycle state
     ASTNode *ast_root;
-    long long peak_memory; // Track peak stack/heap usage
-    int total_allocs;      // Track number of allocations
+    long long peak_memory; // track peak stack usage
+    int total_allocs;      // track num of allocations
 
     long long peak_stack;    
     int current_objects;
 
-    // Add these two lines to fix the compilation error
-    int objects_allocated;   // Total objects currently in heap
-    int objects_reclaimed;   // Objects freed by last GC cycle
+    int objects_allocated;   // total objects currently in heap
+    int objects_reclaimed;   // objects freed by last GC cycle
     int objects_reachable;
 
 }ManagedProgram;
@@ -71,14 +69,10 @@ extern int program_count;
 #include "ir.h"
 
 
-// --- New Command Prototypes ---
 int apsh_submit(char **args);
 int apsh_run(char **args);
 int apsh_debug(char **args);
 int apsh_kill(char **args);
-
-
-// 1. Add prototypes
 int apsh_memstat(char **args);
 int apsh_gc(char **args);
 int apsh_leaks(char **args);

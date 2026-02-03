@@ -5,7 +5,7 @@
 #include "apsh_module.h"
 
 
-// Simple strdup implementation (in case your compiler doesn't have strdup)
+// strdup implementation 
 char *my_strdup(const char *s) {
     size_t len = strlen(s) + 1;
     char *copy = (char *)malloc(len);
@@ -16,15 +16,15 @@ char *my_strdup(const char *s) {
 }
 
 LRUCache *lru_create(int capacity) {
-    // Correctly allocate memory for the structure
+    // allocate memory for the structure
     LRUCache *cache = (LRUCache*)malloc(sizeof(LRUCache)); 
     
-    // Check if memory allocation failed
+    // chaeck if memory alloc failed
     if (!cache) {
         return NULL;
     }
 
-    // Initialize the structure members
+    // in the structure members
     cache->head = NULL;
     cache->tail = NULL;
     cache->capacity = capacity;
@@ -44,19 +44,19 @@ void lru_free(LRUCache *cache) {
     free(cache);
 }
 
-// Move a node to the front (head) of the list
+// move a node to the front of the list
 void move_to_front(LRUCache *cache, Node *node) {
     if (cache->head == node) return;  // already at front
 
-    // Detach node
+    // detach node
     if (node->prev) node->prev->next = node->next;
     if (node->next) node->next->prev = node->prev;
 
-    // If it was tail, update tail
+    // if it's tail, update tail
     if (cache->tail == node)
         cache->tail = node->prev;
 
-    // Insert at front
+    // insert at front
     node->prev = NULL;
     node->next = cache->head;
     if (cache->head)

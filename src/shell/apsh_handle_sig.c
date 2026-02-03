@@ -15,7 +15,7 @@ void handle_sigint(int sig){
     fflush(stdout);
 }
 
-// Handler for SIGCHLD to clean up zombie processes
+// handler for SIGCHLD to clean up zombie processes
 void handle_sigchld(int sig) {
     // waitpid(-1) means "wait for ANY child"
     // WNOHANG means "don't block if no child has exited yet"
