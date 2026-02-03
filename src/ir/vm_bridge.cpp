@@ -42,6 +42,7 @@ extern "C" {
             registry[idx].objects_reclaimed = vm.total_freed;
             registry[idx].objects_reachable = get_reachable_count(&vm);
             registry[idx].current_objects = vm.total_allocs - vm.total_freed;
+            registry[idx].object_size = sizeof(Object);
             registry[idx].status = TERMINATED;
         }
 

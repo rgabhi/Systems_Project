@@ -58,6 +58,7 @@ typedef struct {
     int objects_allocated;   // total objects currently in heap
     int objects_reclaimed;   // objects freed by last GC cycle
     int objects_reachable;
+    int object_size;
 
 }ManagedProgram;
 

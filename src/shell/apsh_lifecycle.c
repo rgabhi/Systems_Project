@@ -224,12 +224,13 @@ int apsh_leaks(char **args) {
     int active = p->objects_allocated - p->objects_reclaimed;
     int reachable = p->objects_reachable;
     int garbage = active - reachable; // The forensic result!
+    long long bytes_leaked = (long long)garbage * p->object_size;
 
     printf("Leak Analysis for PID %s:\n", args[1]);
     printf("  Active Objects:    %d\n", active);
     printf("  Reachable Globals: %d\n", reachable);
-    printf("  True Garbage:      %d  (actual leaks)\n", garbage);
-    // printf("  Garbage Size:      %d  \n", garbage*sizeof());
+    printf("  True Garbage:      %d\n", garbage);
+    printf("  Bytes Leaked:      %lld bytes\n", bytes_leaked);
     return 1;
 }
 
