@@ -64,7 +64,7 @@ A high-level scripting language with C-like syntax supporting:
 | **Variables** | `var x = 10;` | Integer variable declaration |
 | **Control Flow** | `if/else`, `while`, `for` | Standard control structures |
 | **Heap Allocation** | `heap(value)` | Dynamic memory allocation |
-| **Pointer Dereferencing** | `@ptr` or `*ptr` | Access heap-allocated values |
+| **Pointer Dereferencing** | `@ptr` | Access heap-allocated values |
 | **Arithmetic** | `+`, `-`, `*`, `/`, `%` | Standard operators |
 | **Comparisons** | `==`, `!=`, `<`, `>`, `<=`, `>=` | Relational operators |
 
@@ -314,10 +314,8 @@ Debugger ready. Type 'h' for help.
 | `s` or `step` | Execute next instruction | `s` |
 | `c` or `continue` | Run until breakpoint or end | `c` |
 | `m` or `memory` | Display memory statistics | `m` |
-| `h` or `heap` | Show heap state | `h` |
 | `i <addr>` | Inspect object at heap address | `i 0x1A2B` |
 | `b <line>` | Set breakpoint at line | `b 15` |
-| `p` or `print` | Print current stack | `p` |
 | `q` or `quit` | Exit debugger | `q` |
 
 #### Example Debug Session
