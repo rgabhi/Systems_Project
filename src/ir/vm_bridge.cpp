@@ -56,7 +56,7 @@ extern "C" {
 #include <cstring> // for strncmp
 
 extern "C" {
-    void debug_managed_vm(unsigned char* bytecode, int* lines, int pid) {
+    void debug_managed_vm(unsigned char* bytecode, int* lines,int size, int pid) {
         VM vm(bytecode);
         char input[128];
         std::vector<int> breakpoints; // list of PC offsets
@@ -66,6 +66,10 @@ extern "C" {
 
         while (vm.running) {
             int current_pc = (int)(vm.inst_ptr - vm.program);
+
+            //check for line mapping
+            int curr_line = (current_pc < size) ? lines[current_pc] : -1;
+
             printf("dbg@L%03d:PC_%03d> ", lines[current_pc], current_pc);
             
             if (!fgets(input, sizeof(input), stdin)) break;
@@ -73,13 +77,34 @@ extern "C" {
 
             if (cmd == 'q') break;
             
-            if (cmd == 'b') { // set breakpoint
-                int addr;
-                if (sscanf(input + 2, "%d", &addr) == 1) {
-                    breakpoints.push_back(addr);
-                    printf("Breakpoint set at byte offset %d\n", addr);
+            if (cmd == 'b') { 
+                int val;
+                // Case A: Byte Offset (Syntax: b @10)
+                if (input[2] == '@') {
+                    if (sscanf(input + 3, "%d", &val) == 1) {
+                        breakpoints.push_back(val);
+                        printf("Breakpoint set at Byte Offset %d\n", val);
+                    }
                 }
-            } 
+                // Case B: Line Number (Syntax: b 10)
+                else if (sscanf(input + 2, "%d", &val) == 1) {
+                    // Search for the first Byte Offset that corresponds to this Line
+                    int found_pc = -1;
+                    for(int i = 0; i < size; i++) {
+                        if(lines[i] == val) {
+                            found_pc = i;
+                            break; // Stop at the first instruction of that line
+                        }
+                    }
+
+                    if (found_pc != -1) {
+                        breakpoints.push_back(found_pc);
+                        printf("Breakpoint set at Line %d (Byte Offset %d)\n", val, found_pc);
+                    } else {
+                        printf("Warning: No instruction found for Line %d (Empty line?)\n", val);
+                    }
+                }
+            }
             else if (cmd == 's') { // single Step
                 vm.step();
                 if (vm.st_ptr > 0) printf("  Stack Top: %lld\n", vm.stack[vm.st_ptr-1]);

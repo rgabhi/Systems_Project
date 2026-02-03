@@ -121,7 +121,7 @@ int apsh_run(char **args) {
 #ifdef __cplusplus
 extern "C" {
 #endif
- void debug_managed_vm(unsigned char* bytecode, int* lines, int pid);
+ void debug_managed_vm(unsigned char* bytecode, int* lines, int size, int pid);
 
 #ifdef __cplusplus
 }
@@ -155,7 +155,7 @@ int apsh_debug(char **args) {
     
         // 2. Launch Debugger
         pgm->status = RUNNING;
-        debug_managed_vm(bytecode, lines, target_pid);
+        debug_managed_vm(bytecode, lines,bcode_size, target_pid);
     
         pgm->status = TERMINATED;
         free(bytecode);
@@ -228,7 +228,8 @@ int apsh_leaks(char **args) {
     printf("Leak Analysis for PID %s:\n", args[1]);
     printf("  Active Objects:    %d\n", active);
     printf("  Reachable Globals: %d\n", reachable);
-    printf("  True Garbage:      %d  <-- (These are the actual leaks)\n", garbage);
+    printf("  True Garbage:      %d  (actual leaks)\n", garbage);
+    // printf("  Garbage Size:      %d  \n", garbage*sizeof());
     return 1;
 }
 
