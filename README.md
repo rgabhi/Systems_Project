@@ -84,48 +84,75 @@ A high-level scripting language with C-like syntax supporting:
 - **Type Safety** – Runtime type checking for pointer operations
 
 ---
-
 ## 📂 Project Structure
 
 ```
 systems_project/
 │
 ├── src/
-│   ├── shell/              # Shell Implementation
-│   │   ├── apshell.cpp     # Main shell loop
-│   │   ├── process.cpp     # Process management
-│   │   └── signals.cpp     # Signal handlers
+│   ├── shell/                      # Shell Implementation
+│   │   ├── apshell.cpp             # Main shell loop
+│   │   ├── process.cpp             # Process management
+│   │   ├── signals.cpp             # Signal handlers
+│   │   ├── apsh_add_prompt.c       # Prompt handling
+│   │   ├── apsh_background.c       # Background process management
+│   │   ├── apsh_cd.c               # Change directory built-in
+│   │   ├── apsh_execute_pipeline.c # Pipeline execution
+│   │   ├── apsh_exit.c             # Exit command
+│   │   ├── apsh_export.c           # Environment variable export
+│   │   ├── apsh_handle_sig.c       # Signal handling
+│   │   ├── apsh_lifecycle.c        # Process lifecycle management
+│   │   └── apsh_module.h           # Shell module header
 │   │
-│   ├── parser/             # Language Frontend
-│   │   ├── lexer.l         # Flex lexical analyzer
-│   │   └── parser.y        # Bison grammar rules
+│   ├── parser/                     # Language Frontend
+│   │   ├── lexer.l                 # Flex lexical analyzer
+│   │   ├── parser.y                # Bison grammar rules
+│   │   ├── ast.c                   # Abstract Syntax Tree
+│   │   ├── ast.h                   # AST header
+│   │   ├── parser_wrapper.c        # Parser wrapper functions
+│   │   └── level1                  # Parser level 1
 │   │
-│   ├── ir/                 # Intermediate Representation
-│   │   ├── ir_gen.cpp      # IR generation from AST
-│   │   └── optimizer.cpp   # Optional IR optimizations
+│   ├── ir/                         # Intermediate Representation
+│   │   ├── ir.c                    # IR implementation
+│   │   ├── ir.h                    # IR header
+│   │   └── vm_bridge.cpp           # Bridge between IR and VM
 │   │
-│   ├── bvm/                # Virtual Machine Backend
-│       ├── vm/             # Core VM implementation
-│       │   ├── executor.cpp    # Instruction execution loop
-│       │   ├── stack.cpp       # Operand stack
-│       │   └── memory.cpp      # Memory management
+│   ├── bvm/                        # Virtual Machine Backend
+│       ├── assembler/              # Bytecode Generation
+│       │   ├── assembler.cpp       # IR to bytecode translation
+│       │   └── assembler.h         # Assembler header
 │       │
-│       ├── gc/             # Garbage Collector
-│           ├── gc.cpp          # Mark-and-sweep implementation
-│           └── allocator.cpp   # Heap allocator
-│      
-│      
-├── tests/                  # Test Programs
-│   ├── heap_test.lang      # Heap allocation tests
-│   ├── loops.lang          # Control flow tests
-│   ├── stress.lang         # Performance tests
+│       ├── vm/                     # Core VM implementation
+│       │   ├── executor.cpp        # Instruction execution loop
+│       │   ├── stack.cpp           # Operand stack
+│       │   └── memory.cpp          # Memory management
+│       │
+│       ├── gc/                     # Garbage Collector
+│       │   ├── gc.cpp              # Mark-and-sweep implementation
+│       │   └── allocator.cpp       # Heap allocator
+│       │
+│       ├── bvm.cpp                 # BVM main implementation
+│       ├── bvm.h                   # BVM header
+│       └── commons.h               # Common definitions
+│   
+│   
+│   
+│   
 │   
 │
-├── docs/                   # Documentation
-│   └── LANGUAGE.md         # Language specification
+├── tests/                          # Test Programs
+│   ├── demo.lang                   # Demo program
+│   ├── demo2.lang                  # Additional demo
+│   ├── heap_test.lang              # Heap allocation tests
+│   ├── stress_test.lang            # Performance stress tests
+│   ├── test_for.lang               # For loop tests
+│   ├── test_heap.lang              # Heap operation tests
+│   ├── test_unary.lang             # Unary operator tests
+│   ├── test_while.lang             # While loop tests
+│   └── test1.lang                  # General test cases
 │
-├── Makefile                # Build configuration
-└── README.md               # This file
+├── Makefile                        # Build configuration
+└── README.md                       # This file
 ```
 
 ---
@@ -501,13 +528,18 @@ AP_SHELL >> submit tests/arithmetic.lang
 Program successfully parsed... (PID: 1)
 
 AP_SHELL >> run 1
-Execution completed
-Final variables: sum=30, product=200
+Executing PID 1 (tests/demo.lang)...
+Lowering PID 1 to IR...
+Dispatching to VM...
+--- BVM managed exec starting ---
+Stack: [Empty]
+Memory[0] 10
+--- BVM exec complete ---
 ```
 
 ### Example 2: Heap Allocation
 
-**File:** `tests/heap_test.lang`
+**File:** `tests/test_heap.lang`
 
 ```javascript
 // Allocate integer 1234 on the heap
@@ -527,27 +559,22 @@ if (@h == 1234) {
 **Debug Session:**
 ```bash
 AP_SHELL >> debug 1
-(dbg) >> s
-PUSH 1234
-Stack: [1234]
+=== BVM Debugger: PID 1 ===
+Commands: [s]tep, [c]ontinue, [b]reak <addr>, [i]nspect <addr>, [m]emstat, [q]uit
+dbg@L002:PC_000> s
+  Stack Top: 0
+dbg@L002:PC_005> s
+dbg@L003:PC_010> s
+  Stack Top: 1234
+dbg@L003:PC_015> c
+addr---->140726106027976
+=== Debugger Session Terminated ===
 
-(dbg) >> s
-ALLOC
-Stack: [0x1A2B]  # Heap pointer
-Heap: { 0x1A2B → 1234 }
-
-(dbg) >> s
-STORE h
-Variables: { h: 0x1A2B }
-
-(dbg) >> c
-Execution completed
-Final: x = 90
 ```
 
-### Example 3: Fibonacci Sequence
+### Example 3: While Loop
 
-**File:** `tests/while.lang`
+**File:** `tests/test_while.lang`
 
 ```javascript
 
@@ -556,6 +583,21 @@ var x=2;
 while(x<=8){
     x=x*2;
 }
+
+```
+
+**Execution:**
+```bash
+AP_SHELL >> submit tests/arithmetic.lang
+Executing PID 1 (tests/test_while.lang)...
+Lowering PID 1 to IR...
+Dispatching to VM...
+--- BVM managed exec starting ---
+Stack: [Empty]
+Memory[0] 16
+--- BVM exec complete ---
+
+```
 
 
 ```
@@ -582,8 +624,8 @@ while(x<=8){
 
 ### Type System
 
-| Type | Size | Description |
-|------|------|-------------|
+| Type      | Size   | Description           |
+|-----------|--------|-----------------------|
 | `Integer` | 64-bit | Signed integer values |
 | `Pointer` | 64-bit | Heap object reference |
 
@@ -591,7 +633,6 @@ while(x<=8){
 
 - **Stack Size:** 1024 elements (configurable)
 - **Heap Growth:** Dynamic, grows as needed
-- **GC Overhead:** ~5-10% runtime overhead
 - **Instruction Dispatch:** Direct threaded code for performance
 
 ### Safety Features

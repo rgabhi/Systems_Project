@@ -122,6 +122,6 @@ extern "C" {
                 }
             }
         }
-        printf("=== Debugger Session Terminated ===\n");
+        printf("\n=== Debugger Session Terminated ===\n");
     }
 }
